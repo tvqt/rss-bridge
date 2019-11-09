@@ -28,7 +28,7 @@ class VkBridge extends BridgeAbstract
 
 	protected function getAccessToken()
 	{
-		return 'c8071613517c155c6cfbd2a059b2718e9c37b89094c4766834969dda75f657a2c1cbb49bab4c5e649f1db';
+		return '17397ba1efe20571f00b6fd17abe6303bf5060fe9b635f7efbbf22caed9772011314d38716caa8be08bdd';
 	}
 
 	public function getURI()
