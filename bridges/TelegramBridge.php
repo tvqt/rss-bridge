@@ -4,13 +4,32 @@ class TelegramBridge extends BridgeAbstract {
 	const URI = 'https://t.me';
 	const DESCRIPTION = 'Returns newest posts from a public Telegram channel';
 	const MAINTAINER = 'VerifiedJoseph';
-	const PARAMETERS = array(array(
+	const PARAMETERS = array(
+		'' => array(
 			'username' => array(
 				'name' => 'Username',
 				'type' => 'text',
 				'required' => true,
 				'exampleValue' => '@telegram',
+			),
+			'all_posts_in_feed' => array(
+				'name' => 'Get all posts in feed',
+				'type' => 'checkbox',
 			)
+		),
+		'get_photo_uri' => array(
+			'post_id' => array(
+				'name' => 'Post ID',
+				'type' => 'text',
+				'required' => true,
+				'exampleValue' => 'dataleak/2110',
+			),
+			'index' => array(
+				'name' => 'Index',
+				'type' => 'number',
+				'required' => true,
+				'defaultValue' => 0,
+			),
 		)
 	);
 
@@ -265,13 +284,22 @@ EOD;
 
 		$photos = '';
 
-		foreach ($messageDiv->find('a.tgme_widget_message_photo_wrap') as $photoWrap) {
-			preg_match($this->backgroundImageRegex, $photoWrap->style, $photo);
+		$index = 0;
 
-			$this->enclosures[] = $photo[1];
+		foreach ($messageDiv->find('a.tgme_widget_message_photo_wrap') as $photoWrap) {
+			$src = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) . '?' . http_build_query(array(
+				'action' => 'display',
+				'format' => 'Html',
+				'bridge' => 'Telegram',
+				'context' => 'get_photo_uri',
+				'index' => $index++,
+				'post_id' => $messageDiv->find('div.js-widget_message', 0)->getAttribute('data-post'),
+			));
+
+			$this->enclosures[] = $src;
 
 			$photos .= <<<EOD
-<a href="{$photoWrap->href}"><img src="{$photo[1]}"/></a><br>
+<a href="{$photoWrap->href}"><img src="{$src}"/></a><br>
 EOD;
 		}
 		return $photos;
@@ -315,5 +343,27 @@ EOD;
 			return $text[0] . '...';
 		}
 		return $text;
+	}
+
+	private function checkPostID($postID) {
+		if (
+			!preg_match('/^.*\/[0-9]+$/', $postID)
+		) {
+			returnServerError('Incorrect post_id given');
+		}
+	}
+
+	private function getPhotoURI($postID, $index) {
+		$this->checkPostID($postID);
+
+		$html = getSimpleHTMLDOMCached('https://t.me/' . $postID . '?embed=1');
+
+		$photo = $html->find('a.tgme_widget_message_photo_wrap', $index);
+		if (!is_null($photo)) {
+			preg_match($this->backgroundImageRegex, $photo->style, $matched);
+			header('Location: ' . $matched[1], true, 302);
+		} else {
+			returnServerError('Could not get photo');
+		}
 	}
 }
