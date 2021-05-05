@@ -55,14 +55,29 @@ class TelegramBridge extends BridgeAbstract {
 
 	public function collectData() {
 
-		$html = getSimpleHTMLDOM($this->getURI())
-			or returnServerError('Could not request: ' . $this->getURI());
+		if ($this->queriedContext === 'get_photo_uri') {
+			return $this->getPhotoURI($this->getInput('post_id'), $this->getInput('index'));
+		}
 
-		$channelTitle = htmlspecialchars_decode(
-			$html->find('div.tgme_channel_info_header_title span', 0)->plaintext,
-			ENT_QUOTES
-		);
-		$this->feedName = $channelTitle . ' (@' . $this->processUsername() . ')';
+		$this->items = array();
+
+		$html = $this->collectPostsFromURI($this->getURI(), true);
+
+		if (!$this->getInput('all_posts_in_feed')) {
+		}
+	}
+
+	private function collectPostsFromURI($uri, $setFeedTitle) {
+		$html = getSimpleHTMLDOM($uri)
+			or returnServerError('Could not request: ' . $uri);
+
+		if ($setFeedTitle) {
+			$channelTitle = htmlspecialchars_decode(
+				$html->find('div.tgme_channel_info_header_title span', 0)->plaintext,
+				ENT_QUOTES
+			);
+			$this->feedName = $channelTitle . ' (@' . $this->processUsername() . ')';
+		}
 
 		foreach($html->find('div.tgme_widget_message_wrap.js-widget_message_wrap') as $index => $messageDiv) {
 			$this->itemTitle = '';
@@ -77,9 +92,10 @@ class TelegramBridge extends BridgeAbstract {
 			$author = trim($messageDiv->find('a.tgme_widget_message_owner_name', 0)->plaintext);
 			$item['author'] = html_entity_decode($author, ENT_QUOTES);
 
-			$this->items[] = $item;
+			array_unshift($this->items, $item);
 		}
-		$this->items = array_reverse($this->items);
+
+		return $html;
 	}
 
 	public function getURI() {
