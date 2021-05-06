@@ -17,6 +17,14 @@ class TelegramBridge extends BridgeAbstract {
 				'type' => 'checkbox',
 			)
 		),
+		'get_video_uri' => array(
+			'post_id' => array(
+				'name' => 'Post ID',
+				'type' => 'text',
+				'required' => true,
+				'exampleValue' => 'dataleak/2110',
+			),
+		),
 		'get_photo_uri' => array(
 			'post_id' => array(
 				'name' => 'Post ID',
@@ -59,17 +67,53 @@ class TelegramBridge extends BridgeAbstract {
 			return $this->getPhotoURI($this->getInput('post_id'), $this->getInput('index'));
 		}
 
+		if ($this->queriedContext === 'get_video_uri') {
+			return $this->getVideoURI($this->getInput('post_id'));
+		}
+
+
 		$this->items = array();
 
 		$html = $this->collectPostsFromURI($this->getURI(), true);
 
-		if (!$this->getInput('all_posts_in_feed')) {
+		if ($this->getInput('all_posts_in_feed')) {
+			$prev = $html->find('link[rel=prev]', 0);
+			while(!is_null($prev)) {
+				$html = $this->collectPostsFromURI(urljoin($this->getURI(), $prev->href), false);
+				$prev = $html->find('link[rel=prev]', 0);
+			}
 		}
 	}
 
-	private function collectPostsFromURI($uri, $setFeedTitle) {
-		$html = getSimpleHTMLDOM($uri)
-			or returnServerError('Could not request: ' . $uri);
+	private function getSimpleHTMLDOMCached2($url) {
+		$cacheFac = new CacheFactory();
+		$cacheFac->setWorkingDir(PATH_LIB_CACHES);
+		$cache = $cacheFac->create(Configuration::getConfig('cache', 'type'));
+		$cache->setScope('telegram_pages');
+
+		$params = array($url);
+		$cache->setKey($params);
+
+		$content = $cache->loadData();
+		if (!$content) {
+			$content = getContents($url);
+			if($content !== false) {
+				$cache->saveData($content);
+			}
+		}
+
+		return str_get_html($content);
+	}
+
+	private function collectPostsFromURI($uri, $isGettingLatestPosts) {
+		$items = array();
+		$setFeedTitle = $isGettingLatestPosts;
+
+		if ($isGettingLatestPosts) {
+			$html = getSimpleHTMLDOM($uri);
+		} else {
+			$html = $this->getSimpleHTMLDOMCached2($uri);
+		}
 
 		if ($setFeedTitle) {
 			$channelTitle = htmlspecialchars_decode(
@@ -92,8 +136,10 @@ class TelegramBridge extends BridgeAbstract {
 			$author = trim($messageDiv->find('a.tgme_widget_message_owner_name', 0)->plaintext);
 			$item['author'] = html_entity_decode($author, ENT_QUOTES);
 
-			array_unshift($this->items, $item);
+			array_unshift($items, $item);
 		}
+
+		$this->items = array_merge($this->items, $items);
 
 		return $html;
 	}
@@ -283,11 +329,20 @@ EOD;
 			preg_match($this->backgroundImageRegex, $messageDiv->find('i.link_preview_video_thumb', 0)->style, $photo);
 		}
 
+		$src = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) . '?' . http_build_query(array(
+			'action' => 'display',
+			'format' => 'Html',
+			'bridge' => 'Telegram',
+			'context' => 'get_video_uri',
+			'post_id' => $messageDiv->find('div.js-widget_message', 0)->getAttribute('data-post'),
+		));
+		$src = urljoin($this->getSelfURI(), $src);
+
 		$this->enclosures[] = $photo[1];
 
 		return <<<EOD
 <video controls="" poster="{$photo[1]}" preload="none">
-	<source src="{$messageDiv->find('video', 0)->src}" type="video/mp4">
+	<source src="{$src}" type="video/mp4">
 </video>
 EOD;
 	}
@@ -311,6 +366,7 @@ EOD;
 				'index' => $index++,
 				'post_id' => $messageDiv->find('div.js-widget_message', 0)->getAttribute('data-post'),
 			));
+			$src = urljoin($this->getSelfURI(), $src);
 
 			$this->enclosures[] = $src;
 
@@ -319,6 +375,19 @@ EOD;
 EOD;
 		}
 		return $photos;
+	}
+
+	private function getSelfURI() {
+		if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on')
+			$url = "https://";
+			else
+				$url = "http://";
+		// Append the host(domain name, ip) to the URL.
+		$url.= $_SERVER['HTTP_HOST'];
+
+		// Append the requested resource location to the URL
+		$url.= $_SERVER['REQUEST_URI'];
+		return $url;
 	}
 
 	private function processNotSupported($messageDiv) {
@@ -380,6 +449,21 @@ EOD;
 			header('Location: ' . $matched[1], true, 302);
 		} else {
 			returnServerError('Could not get photo');
+		}
+	}
+
+	private function getVideoURI($postID) {
+		$html = getSimpleHTMLDOMCached('https://t.me/' . $postID . '?embed=1');
+
+		$this->checkPostID($postID);
+
+		$html = getSimpleHTMLDOMCached('https://t.me/' . $postID . '?embed=1');
+
+		$video = $html->find('video', 0);
+		if (!is_null($video)) {
+			header('Location: ' . $video->src, true, 302);
+		} else {
+			returnServerError("Could not get video");
 		}
 	}
 }
