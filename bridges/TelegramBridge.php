@@ -61,6 +61,13 @@ class TelegramBridge extends BridgeAbstract {
 		return null;
 	}
 
+	public function getCacheTimeout() {
+		if ($_GET['context'] === 'get_photo_uri' || $_GET['context'] === 'get_video_uri') {
+			return 0;
+		}
+		return parent::getCacheTimeout();
+	}
+
 	public function collectData() {
 
 		if ($this->queriedContext === 'get_photo_uri') {
