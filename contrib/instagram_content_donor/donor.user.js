@@ -5,12 +5,22 @@
 // @grant    GM.xmlHttpRequest
 // ==/UserScript==
 
-const INSTAGRAM_ACCOUTNS_URL='http://localhost:82/instagram_accounts.txt';
+const NODE_INDEX = 0;
+const NODE_COUNT = 1;
 const RSSBRIDGE_ROOT='http://localhost:82';
+const INSTAGRAM_ACCOUNTS_URL=RSSBRIDGE_ROOT + '/instagram_accounts.txt';
 
 function sleep(s) {
   let ms = 1000*s;
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function nextNumber(currentNumber) {
+  let i = NODE_INDEX;
+  while(i <= currentNumber) {
+    i += NODE_COUNT;
+  }
+  return i;
 }
 
 function get(url) {
@@ -43,17 +53,20 @@ function post(url, data) {
 
   let r = await post(RSSBRIDGE_ROOT + "/?action=cache&bridge=Instagram&key=instagram_user_" + username, "value=" + encodeURIComponent(JSON.stringify(unsafeWindow._sharedData)));
 
-  let response = await get(INSTAGRAM_ACCOUTNS_URL);
+  let response = await get(INSTAGRAM_ACCOUNTS_URL);
   let accounts = response.responseText.split("\n").filter(x => x);
   if (accounts.length == 0) {
     alert("No accounts given");
     return;
+  } else if (accounts.length < NODE_INDEX + 1) {
+    alert("Excessive node");
+    return;
   }
 
   let currentIndex = accounts.indexOf(username);
-  let nextIndex = currentIndex + 1;
+  let nextIndex = nextNumber(currentIndex);
   if (nextIndex >= accounts.length) {
-    nextIndex = 0;
+    nextIndex = NODE_INDEX;
   }
 
   await sleep(10 + 5 * Math.random());
