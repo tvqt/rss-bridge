@@ -106,7 +106,7 @@ class InstagramBridge extends BridgeAbstract {
 		$data = $this->getInstagramJSON($this->getURI());
 
 		if(!is_null($this->getInput('u'))) {
-			$userMedia = $data->data->user->edge_owner_to_timeline_media->edges;
+			$userMedia = $data->entry_data->ProfilePage[0]->graphql->user->edge_owner_to_timeline_media->edges;
 		} elseif(!is_null($this->getInput('h'))) {
 			$userMedia = $data->data->hashtag->edge_hashtag_to_media->edges;
 		} elseif(!is_null($this->getInput('l'))) {
@@ -226,16 +226,9 @@ class InstagramBridge extends BridgeAbstract {
 
 	protected function getInstagramJSON($uri) {
 
-		if(!is_null($this->getInput('u'))) {
-
-			$userId = $this->getInstagramUserId($this->getInput('u'));
-			$data = $this->getContents(self::URI .
-								'graphql/query/?query_hash=' .
-								 self::USER_QUERY_HASH .
-								 '&variables={"id"%3A"' .
-								$userId .
-								'"%2C"first"%3A10}');
-			return json_decode($data);
+		if(!is_null($this->getInput('u')) && ($data = $this->getCacheData('instagram_user_' . $this->getInput('u')))) {
+			// return cached data
+			return $data;
 
 		} elseif(!is_null($this->getInput('h'))) {
 			$data = $this->getContents(self::URI .
