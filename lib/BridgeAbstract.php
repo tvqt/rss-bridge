@@ -370,4 +370,30 @@ abstract class BridgeAbstract implements BridgeInterface {
 			return null;
 		}
 	}
+	/**
+	 * Prepares cache object for bridge
+	 *
+	 * @param string $key Key
+	 * @return object Cache object to be used for bridge
+	 */
+    private function prepareCache($key) {
+        $factory = new CacheFactory();
+		$factory->setWorkingDir(PATH_LIB_CACHES);
+		$cache = $factory->create(Configuration::getConfig('cache', 'type'));
+		$cache->setScope(get_called_class());
+		$cache->setKey($key);
+        return $cache;
+    }
+
+    /** {@inheritdoc} */
+    public function getCacheData($key) {
+        $cache = $this->prepareCache($key);
+        return $cache->loadData();
+    }
+
+    /** {@inheritdoc} */
+    public function setCacheData($key, $value) {
+        $cache = $this->prepareCache($key);
+        $cache->saveData($value);
+    }
 }

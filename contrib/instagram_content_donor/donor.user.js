@@ -5,6 +5,7 @@
 // @grant    GM.xmlHttpRequest
 // ==/UserScript==
 
+const ACCESS_TOKEN = 'test_token';
 const NODE_INDEX = 0;
 const NODE_COUNT = 1;
 const RSSBRIDGE_ROOT='http://localhost:82';
@@ -51,7 +52,10 @@ function post(url, data) {
   if (!match || match.length > 1) return;
   let username = match[0];
 
-  let r = await post(RSSBRIDGE_ROOT + "/?action=cache&bridge=Instagram&key=instagram_user_" + username, "value=" + encodeURIComponent(JSON.stringify(unsafeWindow._sharedData)));
+  let r = await post(
+	RSSBRIDGE_ROOT + "/?action=cache&bridge=Instagram&as_json=1&key=instagram_user_" + username,
+	"value=" + encodeURIComponent(JSON.stringify(unsafeWindow._sharedData)) + "&access_token=" + encodeURIComponent(ACCESS_TOKEN)
+  );
 
   let response = await get(INSTAGRAM_ACCOUNTS_URL);
   let accounts = response.responseText.split("\n").filter(x => x);

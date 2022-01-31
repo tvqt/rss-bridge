@@ -23,6 +23,10 @@ type = "file"
 ; false = disabled (default)
 custom_timeout = false
 
+; Access token for allowing to manually set bridge cache using "action=cache"
+; Keep as empty to disable this feature
+access_token = ""
+
 [admin]
 ; Advertise an email address where people can reach the administrator.
 ; This address is displayed on the main page, visible to everyone!

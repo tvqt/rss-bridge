@@ -141,4 +141,20 @@ interface BridgeInterface {
 	 * @return array|null List of bridge parameters or null if detection failed.
 	 */
 	public function detectParameters($url);
+
+    /**
+	 * Returns cached data by given key
+	 *
+	 * @param string $key Key
+	 * @return mixed|null Cached data or null if not available.
+	 */
+    public function getCacheData($key);
+
+    /**
+	 * Save cache data
+	 *
+	 * @param string $key Key
+	 * @param mixed $value Value to cache
+	 */
+    public function setCacheData($key, $value);
 }
