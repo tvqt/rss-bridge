@@ -24,24 +24,39 @@ function nextNumber(currentNumber) {
   return i;
 }
 
+
 function get(url) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     GM.xmlHttpRequest({
       method: "GET",
       url,
-      onload: resolve
+      onload: function(response) {
+        if (response.status != 200) {
+          reject(response);
+        } else {
+          resolve(response);
+        }
+      },
+      onerror: reject
     });
   });
 }
 
 function post(url, data) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     GM.xmlHttpRequest({
       method: "POST",
       url,
       headers: { "Content-type" : "application/x-www-form-urlencoded" },
-      onload: resolve,
-      data: data
+      data: data,
+      onload: function(response) {
+        if (response.status != 200) {
+          reject(response);
+        } else {
+          resolve(response);
+        }
+      },
+      onerror: reject
     });
   });
 }
@@ -52,28 +67,39 @@ function post(url, data) {
   if (!match || match.length > 1) return;
   let username = match[0];
 
-  let r = await post(
-	RSSBRIDGE_ROOT + "/?action=cache&bridge=Instagram&as_json=1&key=instagram_user_" + username,
-	"value=" + encodeURIComponent(JSON.stringify(unsafeWindow._sharedData)) + "&access_token=" + encodeURIComponent(ACCESS_TOKEN)
-  );
-
-  let response = await get(INSTAGRAM_ACCOUNTS_URL);
-  let accounts = response.responseText.split("\n").filter(x => x);
-  if (accounts.length == 0) {
-    alert("No accounts given");
-    return;
-  } else if (accounts.length < NODE_INDEX + 1) {
-    alert("Excessive node");
-    return;
+  try {
+    let r = await post(
+      RSSBRIDGE_ROOT + "/?action=cache&bridge=Instagram&as_json=1&key=instagram_user_" + username,
+      "value=" + encodeURIComponent(JSON.stringify(unsafeWindow._sharedData)) + "&access_token=" + encodeURIComponent(ACCESS_TOKEN)
+    );
+  } catch(e) {
+    console.error("DONOR ERROR: error while posting cache", e);
   }
 
-  let currentIndex = accounts.indexOf(username);
-  let nextIndex = nextNumber(currentIndex);
-  if (nextIndex >= accounts.length) {
-    nextIndex = NODE_INDEX;
+  let nextUsername = username; // fallback if error happens
+
+  try {
+    let accounts = response.responseText.split("\n").filter(x => x);
+    if (accounts.length == 0) {
+      alert("No accounts given");
+      return;
+    } else if (accounts.length < NODE_INDEX + 1) {
+      alert("Excessive node");
+      return;
+    }
+
+    let currentIndex = accounts.indexOf(username);
+    let nextIndex = nextNumber(currentIndex);
+    if (nextIndex >= accounts.length) {
+      nextIndex = NODE_INDEX;
+    }
+
+    nextUsername = accounts[nextIndex];
+  } catch (e) {
+    console.error("DONOR ERROR: error while getting next account to visit", e);
   }
 
   await sleep(10 + 5 * Math.random());
 
-  location.pathname = "/" + accounts[nextIndex];
+  location.pathname = "/" + nextUsername;
 })();
