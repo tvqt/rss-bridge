@@ -79,7 +79,7 @@ function post(url, data) {
   let nextUsername = username; // fallback if error happens
 
   try {
-    let accounts = response.responseText.split("\n").filter(x => x);
+    let accounts = (await get(INSTAGRAM_ACCOUNTS_URL)).responseText.split("\n").filter(x => x);
     if (accounts.length == 0) {
       alert("No accounts given");
       return;
