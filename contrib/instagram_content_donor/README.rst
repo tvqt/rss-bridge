@@ -14,9 +14,7 @@ Installation
 Configuration
 -------------
 
-1. Login to your instagram account
-
-2. Configure your RSS-Bridge instance
+1. Configure your RSS-Bridge instance
 
    a. Add ``instagram_accounts.txt`` in RSS-Bridge root directory and define instagram accounts to be visited
 
@@ -29,17 +27,24 @@ Configuration
    [cache]
    access_token = "YOUR_ACCESS_TOKEN_HERE"
 
-2. Edit userscript by clicking on Greasemonkey icon -> Instagram content donor for RSS-Bridge -> Edit
+2. Temporary disable "Instagram content donor for RSS-Bridge" userscript by clicking on Greasemonkey icon -> Instagram content donor for RSS-Bridge -> Untick "Enabled"
+
+3. Login to your instagram account.
+   Input verification code if required.
+
+4. Edit userscript by clicking on Greasemonkey icon -> Instagram content donor for RSS-Bridge -> Edit
 
    a. Modify RSSBRIDGE_ROOT to your one. Must not end with slash
 
-   b. Modify ACCESS_TOKEN to that one, that you set in step 2b
+   b. Modify ACCESS_TOKEN to that one, that you set in step 1
 
 If are using more than one account to retreive content, you need to follow steps above for every account and also update following variables in userscript:
 
 - ``NODE_COUNT`` set to number of used accounts
 
 - ``NODE_INDEX`` for first account must be 0, for second account must be 1, for third account must be 2 etc
+
+5. Enable "Instagram content donor for RSS-Bridge" userscript
 
 Usage
 -----
