@@ -163,7 +163,11 @@ function is429Error() {
   return !unsafeWindow._sharedData;
 }
 
-(async () => {
+async function main() {
+  while(!document || !document.querySelector) {
+    await sleep(1);
+  }
+
   let currentFetchingInstagramAccount = null;
   let state = getState();
   console.log("current state", state);
@@ -186,6 +190,11 @@ function is429Error() {
     break;
 
     case "login":
+      if (document.querySelector("img[data-testid='user-avatar']")) {
+        setState("get_next_instagram_account");
+        location.pathname = "/";
+        return;
+      }
       const [username_to_login, password] = await GM.getValue("lw");
       if (!username_to_login || !password) {
         alert("No login given");
@@ -269,4 +278,6 @@ function is429Error() {
       alert("Unknown state: " + state);
     break;
   };
-})();
+};
+
+main();
