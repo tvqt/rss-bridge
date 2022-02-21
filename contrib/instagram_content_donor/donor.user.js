@@ -12,6 +12,14 @@ const NODE_INDEX = 0;
 const NODE_COUNT = 1;
 const RSSBRIDGE_ROOT='http://localhost:82';
 const INSTAGRAM_ACCOUNTS_URL=RSSBRIDGE_ROOT + '/instagram_accounts.txt';
+/*
+Example:
+const LOGINS_PASSWORDS = [
+  "username1 password1",
+  "username2 password2",
+  "username3 password3",
+];
+*/
 const LOGINS_PASSWORDS = [
 ];
 
