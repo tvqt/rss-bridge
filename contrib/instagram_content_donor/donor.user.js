@@ -195,6 +195,10 @@ async function main() {
         location.pathname = "/";
         return;
       }
+      let loginBtns = Array.from(document.querySelectorAll("button[type='button']")).filter( x => x.innerText == "Log In" );
+      if (loginBtns.length) {
+        random_choise(loginBtns).click();
+      } else {
       const [username_to_login, password] = await GM.getValue("lw");
       if (!username_to_login || !password) {
         alert("No login given");
@@ -209,6 +213,7 @@ async function main() {
       document.execCommand("insertText", false, password);
       document.querySelector("button[type='submit']").click();
       setState("get_next_instagram_account");
+      }
 
       // givin time to login, it will redirect automatically
       await sleep(10);
