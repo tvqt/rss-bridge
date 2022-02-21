@@ -190,6 +190,7 @@ async function main() {
     break;
 
     case "login":
+      await sleep(10);
       if (document.querySelector("img[data-testid='user-avatar']")) {
         setState("get_next_instagram_account");
         location.pathname = "/";
