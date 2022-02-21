@@ -29,28 +29,28 @@ Configuration
 
 2. Temporary disable "Instagram content donor for RSS-Bridge" userscript by clicking on Greasemonkey icon -> Instagram content donor for RSS-Bridge -> Untick "Enabled"
 
-3. Edit userscript by clicking on Greasemonkey icon -> Instagram content donor for RSS-Bridge -> Edit
+3. Login to your instagram account.
+   Input verification code if required.
+
+4. Edit userscript by clicking on Greasemonkey icon -> Instagram content donor for RSS-Bridge -> Edit
 
    a. Modify RSSBRIDGE_ROOT to your one. Must not end with slash
 
    b. Modify ACCESS_TOKEN to that one, that you set in step 1
 
-   c. Modify LOGIN_PASSWORDS to list instagram accounts to be used for logging in
+If are using more than one account to retreive content, you need to follow steps above for every account and also update following variables in userscript:
 
-4. Enable "Instagram content donor for RSS-Bridge" userscript
+- ``NODE_COUNT`` set to number of used accounts
+
+- ``NODE_INDEX`` for first account must be 0, for second account must be 1, for third account must be 2 etc
+
+5. Enable "Instagram content donor for RSS-Bridge" userscript
 
 Usage
 -----
 
 After configurating RSS-Brige and userscript, visit any instagram profile and reload the page.
-Crawling will be started on 9:00 AM.
-It will login and crawl instagram accounts.
-
-Pausing/resuming
-----------------
-
-To pause crawling, disable the userscript.
-To resume crawling, enable the userscript and reload the page.
+After approximately 10 seconds browser will be redirected to other instagram account.
 
 Maintainance
 ------------
