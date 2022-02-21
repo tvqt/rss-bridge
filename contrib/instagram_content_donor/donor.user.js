@@ -77,6 +77,26 @@ function getState() {
   return localStorage.getItem("donor_state") || "waiting_for_start";
 }
 
+function showProgress() {
+  let p = localStorage.getItem("donor_progress");
+  if (!p) return;
+  let d = document.createElement("div");
+  d.style.bottom = 0;
+  d.style.right = 0;
+  d.style.position = "fixed";
+  d.style.backgroundColor = "red";
+  d.innerHTML = p;
+  document.body.appendChild(d);
+}
+
+function setProgress(p) {
+  if (p) {
+    localStorage.setItem("donor_progress", p);
+  } else {
+    localStorage.removeItem("donor_progress");
+  }
+}
+
 async function fetchInstagramAccounts() {
   try {
     let accounts = (await get(INSTAGRAM_ACCOUNTS_URL)).responseText.split("\n").filter(x => x);
@@ -90,6 +110,7 @@ async function fetchInstagramAccounts() {
 
     // remove duplicates
     accounts = [...new Set(accounts)];
+    // TODO: sort
 
     return accounts;
   } catch (e) {
@@ -105,8 +126,6 @@ function setStatus(status) {
 }
 
 async function popNextInstagramAccountToCrawl(current) {
-  // TODO: log progress
-
   let accounts = await fetchInstagramAccounts();
 
   let currentIndex = accounts.indexOf(current);
@@ -114,38 +133,47 @@ async function popNextInstagramAccountToCrawl(current) {
 
   if (!current) {
     return accounts[NODE_INDEX];
-  } else if (nextIndex < accounts.length) {
+  }
+
+  // setting progress
+  setProgress("Progress: " + (nextIndex + 1).toString() + " of " + accounts.length.toString());
+
+  if (nextIndex < accounts.length) {
     return accounts[nextIndex];
   } else {
     return null;
   }
 }
 
-async function init() {
+async function logout() {
   var s = document.createElement("script");
-  s.src = "https://instagram.com/accounts/logout";
-  $("head").append(s);
-  location.reload();
+  s.src = "https://www.instagram.com/accounts/logout";
+  document.head.appendChild(s);
+}
+
+function is429Error() {
+  return !unsafeWindow._sharedData;
 }
 
 (async () => {
   let currentFetchingInstagramAccount = null;
   let state = getState();
   console.log("current state", state);
+  showProgress();
   switch(state) {
     case "waiting_for_start":
-      await init();
+      await logout();
       while (true) {
+        await sleep(2);
         let now = new Date();
-        if (true) { //now.getHours() >= 9) {
+        if (now.getHours() >= 9) {
           let responseText = random_choise(LOGINS_PASSWORDS);
           GM.setValue("lw", responseText.split(" "));
           setState("login");
-          location.href = "/";
-          location.reload();
+          location.pathname = "/";
           return;
         }
-        await sleep(10);
+        await sleep(8);
       }
     break;
 
@@ -170,11 +198,18 @@ async function init() {
 
       // it could not login
       setState("login");
-      alert("Could not login");
-      return;
+      console.log("DONOR ERROR: Could not login");
+      await sleep(5)
+      location.reload();
     break;
 
     case "fetch_instagram_account":
+      if (is429Error()) {
+        setState("waiting_for_start");
+        location.pathname = "/";
+        return;
+      }
+
       let re = /[^/]+/;
       let match = location.pathname.match(re);
       if (!match || match.length > 1) {
@@ -198,18 +233,21 @@ async function init() {
       }
 
       await sleep(10 + 5 * Math.random());
-      // TODO: scroll down
-      // TODO: click on some post
+      window.scrollTo({"top": 500, "left": 0, "behavior": "smooth"})
+      await sleep(1 + 3 * Math.random());
+      document.elementFromPoint(400, 100).click()
+      await sleep(3 + 3 * Math.random());
     // break;
 
     case "get_next_instagram_account":
       let nextInstagramAccount = await popNextInstagramAccountToCrawl(currentFetchingInstagramAccount);
       if (!nextInstagramAccount) {
+        setProgress(false);
         console.log("all finished");
+        setState("waiting_for_start");
         while(true) {
           let now = new Date();
           if (now.getHours() < 9) {
-            setState("waiting_for_start");
             location.pathname = "/";
           }
           await sleep(10);
