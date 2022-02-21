@@ -49,7 +49,7 @@ If are using more than one account to retreive content, you need to follow steps
 Usage
 -----
 
-After configurating RSS-Brige and userscript, visit any instagram profile.
+After configurating RSS-Brige and userscript, visit any instagram profile and reload the page.
 After approximately 10 seconds browser will be redirected to other instagram account.
 
 Maintainance
