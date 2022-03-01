@@ -38,6 +38,7 @@ class FileCache implements CacheInterface {
 	}
 
 	public function purgeCache($seconds){
+return;
 		$cachePath = $this->getPath();
 		if(file_exists($cachePath)) {
 			$cacheIterator = new RecursiveIteratorIterator(
