@@ -10,6 +10,7 @@
 const ACCESS_TOKEN = 'test_token';
 const NODE_INDEX = 0;
 const NODE_COUNT = 1;
+const START_HOUR = 5;
 const RSSBRIDGE_ROOT='http://localhost:82';
 const INSTAGRAM_ACCOUNTS_URL=RSSBRIDGE_ROOT + '/instagram_accounts.txt';
 /*
@@ -107,7 +108,7 @@ function setProgress(p) {
 
 async function fetchInstagramAccounts() {
   try {
-    let accounts = (await get(INSTAGRAM_ACCOUNTS_URL)).responseText.split("\n").filter(x => x);
+    let accounts = (await get(INSTAGRAM_ACCOUNTS_URL + "?_=" + Date.now())).responseText.split("\n").filter(x => x);
     if (accounts.length == 0) {
       alert("No accounts given");
       return null;
@@ -126,14 +127,15 @@ async function fetchInstagramAccounts() {
     await sleep(10);
     location.reload();
     await sleep(10);
-	return null;
+    return null;
   }
 }
 
 function setStatus(status) {
 }
 
-async function popNextInstagramAccountToCrawl(current) {
+async function popNextInstagramAccountToCrawl() {
+  let current = localStorage.getItem("current_account");
   let accounts = await fetchInstagramAccounts();
 
   let currentIndex = accounts.indexOf(current);
@@ -154,13 +156,25 @@ async function popNextInstagramAccountToCrawl(current) {
 }
 
 async function logout() {
+  let ili = await isLoggedIn();
+  if (!ili) return;
   var s = document.createElement("script");
   s.src = "https://www.instagram.com/accounts/logout";
   document.head.appendChild(s);
 }
 
+async function isLoggedIn() {
+  console.log("checking if logged in");
+  for (var i=0; i<10; i++) {
+    if (document.querySelector("img[data-testid='user-avatar']")) return true;
+    await sleep(1);
+  }
+  return false;
+}
+
 function is429Error() {
-  return !unsafeWindow._sharedData;
+  let c = document.querySelector(".error-container");
+  return c && c.innerText.indexOf("Please wait") > -1;
 }
 
 async function main() {
@@ -178,7 +192,7 @@ async function main() {
       while (true) {
         await sleep(2);
         let now = new Date();
-        if (now.getHours() >= 9) {
+        if (now.getHours() >= START_HOUR) {
           let responseText = random_choise(LOGINS_PASSWORDS);
           GM.setValue("lw", responseText.split(" "));
           setState("login");
@@ -222,7 +236,7 @@ async function main() {
       // it could not login
       setState("login");
       console.log("DONOR ERROR: Could not login");
-      await sleep(5)
+      await sleep(5);
       location.reload();
     break;
 
@@ -256,27 +270,29 @@ async function main() {
       }
 
       await sleep(10 + 5 * Math.random());
-      window.scrollTo({"top": 500, "left": 0, "behavior": "smooth"})
+      window.scrollTo({"top": 500, "left": 0, "behavior": "smooth"});
       await sleep(1 + 3 * Math.random());
-      document.elementFromPoint(400, 100).click()
+      document.elementFromPoint(400, 100).click();
       await sleep(3 + 3 * Math.random());
     // break;
 
     case "get_next_instagram_account":
-      let nextInstagramAccount = await popNextInstagramAccountToCrawl(currentFetchingInstagramAccount);
+      let nextInstagramAccount = await popNextInstagramAccountToCrawl();
       if (!nextInstagramAccount) {
         setProgress(false);
+        localStorage.removeItem("current_account");
         console.log("all finished");
         setState("waiting_for_start");
         while(true) {
           let now = new Date();
-          if (now.getHours() < 9) {
+          if (now.getHours() < START_HOUR) {
             location.pathname = "/";
           }
           await sleep(10);
         }
       }
       setState("fetch_instagram_account");
+      localStorage.setItem("current_account", nextInstagramAccount);
       location.pathname = "/" + nextInstagramAccount;
     break;
 
