@@ -206,9 +206,7 @@ class InstagramBridge extends BridgeAbstract {
 
 	// returns Video post's contents and enclosures
 	protected function getInstagramVideoData($uri, $mediaURI, $mediaInfo, $textContent) {
-		$content = '<video controls>';
-		$content .= '<source src="proxy.php?' . urlencode($mediaInfo->video_url) . '" poster=/proxy.php?"' . urlencode($mediaURI) . '" type="video/mp4">';
-		$content .= '<img src="proxy.php?' . urlencode($mediaURI) . '" alt="">';
+		$content = '<video controls src="proxy.php?' . urlencode($mediaInfo->video_url) . '" poster=/proxy.php?"' . urlencode($mediaURI) . '" type="video/mp4">';
 		$content .= '</video><br>';
 		$content .= '<br>' . nl2br(htmlentities($textContent));
 
