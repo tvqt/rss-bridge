@@ -343,9 +343,7 @@ class FeedItem {
 			Debug::log('Enclosures must be an array!');
 		} else {
 			foreach($enclosures as $enclosure) {
-				if(!filter_var(
-					$enclosure,
-					FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED)) {
+				if(false) { // disabled scheme host and path check
 					Debug::log('Each enclosure must contain a scheme, host and path!');
 				} elseif(!in_array($enclosure, $this->enclosures)) {
 					$this->enclosures[] = $enclosure;
