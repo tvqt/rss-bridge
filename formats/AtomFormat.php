@@ -113,10 +113,10 @@ class AtomFormat extends FormatAbstract{
 		<published>{$entryTimestamp}</published>
 		<updated>{$entryTimestamp}</updated>
 		<id>{$entryID}</id>
+		{$entryEnclosures}
 		{$entryLinkAlternate}
 		{$entryAuthor}
 		<content type="html">{$entryContent}</content>
-		{$entryEnclosures}
 		{$entryCategories}
 		{$entryThumbnail}
 	</entry>
