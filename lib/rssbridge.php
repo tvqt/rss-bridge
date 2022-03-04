@@ -50,6 +50,8 @@ define('FILE_CONFIG_DEFAULT', PATH_ROOT . 'config.default.ini.php');
 /** URL to the RSS-Bridge repository */
 define('REPOSITORY', 'https://github.com/RSS-Bridge/rss-bridge/');
 
+define('SELF_SCHEME_HOST', ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https://' : 'http://') . ((isset($_SERVER['HTTP_HOST'])) ? $_SERVER['HTTP_HOST'] : ''));
+
 // Interfaces
 require_once PATH_LIB . 'ActionInterface.php';
 require_once PATH_LIB . 'BridgeInterface.php';

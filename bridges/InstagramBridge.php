@@ -164,6 +164,7 @@ class InstagramBridge extends BridgeAbstract {
 					$item['enclosures'] = array($mediaURI);
 					break;
 				case 'GraphVideo':
+					$mediaURI = SELF_SCHEME_HOST . '/proxy.php?' . urlencode($mediaURI);
 					$data = $this->getInstagramVideoData($item['uri'], $mediaURI, $media, $textContent);
 					$item['content'] = $data[0];
 					if($directLink) {
@@ -206,11 +207,12 @@ class InstagramBridge extends BridgeAbstract {
 
 	// returns Video post's contents and enclosures
 	protected function getInstagramVideoData($uri, $mediaURI, $mediaInfo, $textContent) {
-		$content = '<video controls src="proxy.php?' . urlencode($mediaInfo->video_url) . '" poster="proxy.php?' . urlencode($mediaURI) . '" type="video/mp4">';
+		$videoURL = SELF_SCHEME_HOST . '/proxy.php?' . urlencode($mediaInfo->video_url);
+		$content = '<video controls src="' . $videoURL . '" poster="' . $mediaURI . '" type="video/mp4">';
 		$content .= '</video><br>';
 		$content .= '<br>' . nl2br(htmlentities($textContent));
 
-		return array($content, array($mediaInfo->video_url));
+		return array($content, array($videoURL));
 	}
 
 	protected function getTextContent($media) {
