@@ -1,4 +1,7 @@
 <?php
+
+define('PATH_CACHE_INSTAGRAM', PATH_CACHE . 'InstagramBridge/');
+
 class InstagramBridge extends BridgeAbstract {
 
 	// const MAINTAINER = 'pauder';
@@ -189,9 +192,10 @@ class InstagramBridge extends BridgeAbstract {
 		foreach($mediaInfo->edge_sidecar_to_children->edges as $singleMedia) {
 			$singleMedia = $singleMedia->node;
 			if($singleMedia->is_video) {
-				if(in_array($singleMedia->video_url, $enclosures)) continue; // check if not added yet
-				$content .= '<video controls><source src="' . $singleMedia->video_url . '" type="video/mp4"></video><br>';
-				array_push($enclosures, $singleMedia->video_url);
+				$videoURL = $this->prepareVideoURL($singleMedia);
+				if(in_array($videoURL, $enclosures)) continue; // check if not added yet
+				$content .= '<video controls src="' . $videoURL . '" type="video/mp4"></video><br>';
+				array_push($enclosures, $videoURL);
 			} else {
 				if(in_array($singleMedia->display_url, $enclosures)) continue; // check if not added yet
 				$content .= '<a href="' . $singleMedia->display_url . '" target="_blank">';
@@ -205,9 +209,20 @@ class InstagramBridge extends BridgeAbstract {
 		return array($content, $enclosures);
 	}
 
+	protected function prepareVideoURL($mediaInfo) {
+		$originalVideoURL = $mediaInfo->video_url;
+		file_put_contents(PATH_CACHE_INSTAGRAM . $mediaInfo->id . ".txt", $originalVideoURL);
+		if (file_exists(PATH_CACHE_INSTAGRAM . $mediaInfo->id . ".mp4")) {
+			$videoURL = Configuration::getConfig("InstagramBridge", "video_url_prefix") . $mediaInfo->id . ".mp4";
+		} else {
+			$videoURL = '/proxy.php?' . urlencode($mediaInfo->video_url);
+		}
+		return $videoURL;
+	}
+
 	// returns Video post's contents and enclosures
 	protected function getInstagramVideoData($uri, $mediaURI, $mediaInfo, $textContent) {
-		$videoURL = '/proxy.php?' . urlencode($mediaInfo->video_url);
+		$videoURL = $this->prepareVideoURL($mediaInfo);
 		$content = '<video controls src="' . $videoURL . '" poster="' . $mediaURI . '" type="video/mp4">';
 		$content .= '</video><br>';
 		$content .= '<br>' . nl2br(htmlentities($textContent));
