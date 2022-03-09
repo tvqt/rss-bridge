@@ -7,7 +7,10 @@ do
 	mp4="${txt/.txt/.mp4}"
 	youtube-dl `cat $txt` -o $mp4 || true
 	if [ -f "$mp4" ]; then
-		rm -f "$txt"
+		size=`stat --printf="%s" $mp4`
+		if [ "$size" != "0" ]; then
+			rm -f "$txt"
+		fi
+		touch "$mp4"
 	fi
-	touch "$mp4"
 done
