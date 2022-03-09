@@ -210,10 +210,17 @@ class InstagramBridge extends BridgeAbstract {
 	}
 
 	protected function prepareVideoURL($mediaInfo) {
+		$outputPathRelative = $this->getInput('u') . '/';
+		$outputPath = PATH_CACHE_INSTAGRAM . $outputPathRelative;
+		if (!is_dir($outputPath)) {
+			mkdir($outputPath, 0777);
+		}
 		$originalVideoURL = $mediaInfo->video_url;
-		file_put_contents(PATH_CACHE_INSTAGRAM . $mediaInfo->id . ".txt", $originalVideoURL);
-		if (file_exists(PATH_CACHE_INSTAGRAM . $mediaInfo->id . ".mp4")) {
-			$videoURL = Configuration::getConfig("InstagramBridge", "video_url_prefix") . $mediaInfo->id . ".mp4";
+		$txt = $outputPath . $mediaInfo->id . ".txt";
+		$mp4 = $outputPath . $mediaInfo->id . ".mp4";
+		file_put_contents($txt, $originalVideoURL);
+		if (file_exists($mp4)) {
+			$videoURL = Configuration::getConfig("InstagramBridge", "video_url_prefix") . $outputPathRelative . $mediaInfo->id . ".mp4";
 		} else {
 			$videoURL = '/proxy.php?' . urlencode($mediaInfo->video_url);
 		}
