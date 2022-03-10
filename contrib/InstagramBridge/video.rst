@@ -21,8 +21,8 @@ Before we start, lets assume, that:
 
    # make sure are logged in as root first
 
-   wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/local/bin/youtube-dl
-   chmod +x /usr/local/bin/youtube-dl
+   wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/bin/youtube-dl
+   chmod +x /usr/bin/youtube-dl
 
 2. Schedule tasks for downloading videos and cleaning up old videos
 
