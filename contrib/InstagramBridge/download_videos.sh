@@ -5,7 +5,9 @@ set -xe
 for txt in `find ./cache/InstagramBridge -name "*.txt"`
 do
 	mp4="${txt/.txt/.mp4}"
-	youtube-dl `cat $txt` -o $mp4 || true
+	if [ ! -f "$mp4" ]; then
+		youtube-dl `cat $txt` -o $mp4 || true
+	fi
 	if [ -f "$mp4" ]; then
 		size=`stat --printf="%s" $mp4`
 		if [ "$size" != "0" ]; then
