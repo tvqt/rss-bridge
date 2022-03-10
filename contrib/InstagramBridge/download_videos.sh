@@ -12,7 +12,9 @@ do
 		size=`stat --printf="%s" $mp4`
 		if [ "$size" != "0" ]; then
 			rm -f "$txt"
+			touch "$mp4"
+		else
+			rm -f "$mp4"
 		fi
-		touch "$mp4"
 	fi
 done
