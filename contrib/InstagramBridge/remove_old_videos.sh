@@ -2,4 +2,4 @@
 cd "$(dirname "$0")"
 cd ../..
 set -xe
-find ./cache/InstagramBridge -mtime +5 -name "*.mp4" -delete
+find ./cache/InstagramBridge -mtime +7 -name "*.mp4" -delete
