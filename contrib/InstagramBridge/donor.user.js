@@ -205,7 +205,7 @@ async function main() {
 
     case "login":
       await sleep(10);
-      if (document.querySelector("img[data-testid='user-avatar']")) {
+      if (await isLoggedIn()) {
         setState("get_next_instagram_account");
         location.pathname = "/";
         return;
@@ -220,6 +220,14 @@ async function main() {
         return;
       }
       await sleep(3);
+      var el = null;
+      el = document.querySelector("input[name='username']");
+      if (!el) {
+        console.log("could not find username textbox. Redirecting");
+        await sleep(3);
+        location.pathname = "/accounts/login";
+        return;
+      }
       document.querySelector("input[name='username']").focus();
       document.execCommand("selectAll");
       document.execCommand("insertText", false, username_to_login);
