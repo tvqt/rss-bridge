@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
+log () {
+	echo -e "$(date)\n$1" > ./cache/InstagramBridge/status.txt
+}
+
 cd "$(dirname "$0")"
 cd ../..
+log "searching for tasks for downloading"
+TXT_LIST=`find ./cache/InstagramBridge -mindepth 2 -name "*.txt"`
+TXT_COUNT="$(echo "$TXT_LIST" | wc -l)"
+COUNTER=0
 set -xe
-for txt in `find ./cache/InstagramBridge -name "*.txt"`
+for txt in $TXT_LIST
 do
+	let COUNTER=COUNTER+1
 	mp4="${txt/.txt/.mp4}"
+	log "($COUNTER/$TXT_COUNT) downloading file $mp4"
 	if [ ! -f "$mp4" ]; then
 		youtube-dl `cat $txt` -o $mp4 || true
 	fi
@@ -18,3 +28,4 @@ do
 		fi
 	fi
 done
+log "finished"
