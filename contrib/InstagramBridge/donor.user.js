@@ -118,8 +118,7 @@ async function fetchInstagramAccounts() {
     }
 
     // remove duplicates
-    accounts = [...new Set(accounts)];
-    // TODO: sort
+    accounts = [...new Set(accounts)].sort();
 
     return accounts;
   } catch (e) {

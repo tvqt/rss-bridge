@@ -167,7 +167,6 @@ class InstagramBridge extends BridgeAbstract {
 					$item['enclosures'] = array($mediaURI);
 					break;
 				case 'GraphVideo':
-					$mediaURI = '/proxy.php?' . urlencode($mediaURI);
 					$data = $this->getInstagramVideoData($item['uri'], $mediaURI, $media, $textContent);
 					$item['content'] = $data[0];
 					if($directLink) {
@@ -189,13 +188,17 @@ class InstagramBridge extends BridgeAbstract {
 	protected function getInstagramSidecarData($uri, $postTitle, $mediaInfo, $textContent) {
 		$enclosures = array();
 		$content = '';
+		$autoplay = "autoplay muted";
 		foreach($mediaInfo->edge_sidecar_to_children->edges as $singleMedia) {
 			$singleMedia = $singleMedia->node;
 			if($singleMedia->is_video) {
 				$videoURL = $this->prepareVideoURL($singleMedia);
 				if(in_array($videoURL, $enclosures)) continue; // check if not added yet
-				$content .= '<video controls src="' . $videoURL . '" type="video/mp4"></video><br>';
+				$content .= '<video ' . $autoplay . ' controls src="' . $videoURL . '" type="video/mp4">';
+				$content .= '<img src="' . $singleMedia->display_url . '" />';
+				$content .= '</video><br>';
 				array_push($enclosures, $videoURL);
+				$autoplay = '';
 			} else {
 				if(in_array($singleMedia->display_url, $enclosures)) continue; // check if not added yet
 				$content .= '<a href="' . $singleMedia->display_url . '" target="_blank">';
@@ -219,7 +222,7 @@ class InstagramBridge extends BridgeAbstract {
 		$txt = $outputPath . $mediaInfo->id . ".txt";
 		$mp4 = $outputPath . $mediaInfo->id . ".mp4";
 		file_put_contents($txt, $originalVideoURL);
-		if (file_exists($mp4)) {
+		if (true) { //file_exists($mp4)) {
 			$videoURL = Configuration::getConfig("InstagramBridge", "video_url_prefix") . $outputPathRelative . $mediaInfo->id . ".mp4";
 		} else {
 			$videoURL = '/proxy.php?' . urlencode($mediaInfo->video_url);
@@ -230,7 +233,8 @@ class InstagramBridge extends BridgeAbstract {
 	// returns Video post's contents and enclosures
 	protected function getInstagramVideoData($uri, $mediaURI, $mediaInfo, $textContent) {
 		$videoURL = $this->prepareVideoURL($mediaInfo);
-		$content = '<video controls src="' . $videoURL . '" poster="' . $mediaURI . '" type="video/mp4">';
+		$content = '<video autoplay muted controls src="' . $videoURL . '" poster="' . $mediaURI . '" type="video/mp4">';
+		$content .= '<img src="' . $mediaURI . '" />';
 		$content .= '</video><br>';
 		$content .= '<br>' . nl2br(htmlentities($textContent));
 
