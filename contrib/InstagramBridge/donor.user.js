@@ -137,19 +137,23 @@ async function popNextInstagramAccountToCrawl() {
   let current = localStorage.getItem("current_account");
   let accounts = await fetchInstagramAccounts();
 
-  let currentIndex = accounts.indexOf(current);
-  let nextIndex = nextNumber(currentIndex);
-
-  if (!current) {
-    return accounts[NODE_INDEX];
+  let currentIndex = -1;
+  let nextIndex = NODE_INDEX;
+  if (current) {
+    currentIndex = accounts.indexOf(current);
+    nextIndex = nextNumber(currentIndex);
   }
 
   // setting progress
   setProgress("Progress: " + (nextIndex + 1).toString() + " of " + accounts.length.toString());
 
   if (nextIndex < accounts.length) {
-    return accounts[nextIndex];
+    let next = accounts[nextIndex];
+    localStorage.setItem("current_account", next);
+    return next;
   } else {
+    setProgress(false);
+    localStorage.removeItem("current_account");
     return null;
   }
 }
@@ -286,8 +290,6 @@ async function main() {
     case "get_next_instagram_account":
       let nextInstagramAccount = await popNextInstagramAccountToCrawl();
       if (!nextInstagramAccount) {
-        setProgress(false);
-        localStorage.removeItem("current_account");
         console.log("all finished");
         setState("waiting_for_start");
         while(true) {
@@ -299,7 +301,6 @@ async function main() {
         }
       }
       setState("fetch_instagram_account");
-      localStorage.setItem("current_account", nextInstagramAccount);
       location.pathname = "/" + nextInstagramAccount;
     break;
 
