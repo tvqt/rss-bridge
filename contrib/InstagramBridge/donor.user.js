@@ -185,7 +185,6 @@ async function main() {
     await sleep(1);
   }
 
-  let currentFetchingInstagramAccount = null;
   let state = getState();
   console.log("current state", state);
   showProgress();
@@ -266,7 +265,6 @@ async function main() {
         return;
       }
       let username = match[0];
-      currentFetchingInstagramAccount = username;
 
       try {
         let r = await post(
