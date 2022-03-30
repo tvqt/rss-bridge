@@ -189,33 +189,33 @@ async function main() {
   console.log("current state", state);
   showProgress();
   switch(state) {
-    case "waiting_for_start":
-      await logout();
-      while (true) {
-        await sleep(2);
-        let now = new Date();
-        if (now.getHours() >= START_HOUR) {
-          let responseText = random_choise(LOGINS_PASSWORDS);
-          GM.setValue("lw", responseText.split(" "));
-          setState("login");
-          location.pathname = "/";
-          return;
-        }
-        await sleep(8);
-      }
-    break;
-
-    case "login":
-      await sleep(10);
-      if (await isLoggedIn()) {
-        setState("get_next_instagram_account");
+  case "waiting_for_start":
+    await logout();
+    while (true) {
+      await sleep(2);
+      let now = new Date();
+      if (now.getHours() >= START_HOUR) {
+        let responseText = random_choise(LOGINS_PASSWORDS);
+        GM.setValue("lw", responseText.split(" "));
+        setState("login");
         location.pathname = "/";
         return;
       }
-      let loginBtns = Array.from(document.querySelectorAll("button[type='button']")).filter( x => x.innerText == "Log In" );
-      if (loginBtns.length) {
-        random_choise(loginBtns).click();
-      } else {
+      await sleep(8);
+    }
+    break;
+
+  case "login":
+    await sleep(10);
+    if (await isLoggedIn()) {
+      setState("get_next_instagram_account");
+      location.pathname = "/";
+      return;
+    }
+    let loginBtns = Array.from(document.querySelectorAll("button[type='button']")).filter( x => x.innerText == "Log In" );
+    if (loginBtns.length) {
+      random_choise(loginBtns).click();
+    } else {
       const [username_to_login, password] = await GM.getValue("lw");
       if (!username_to_login || !password) {
         alert("No login given");
@@ -238,72 +238,72 @@ async function main() {
       document.execCommand("insertText", false, password);
       document.querySelector("button[type='submit']").click();
       setState("get_next_instagram_account");
-      }
+    }
 
-      // givin time to login, it will redirect automatically
-      await sleep(10);
+    // givin time to login, it will redirect automatically
+    await sleep(10);
 
-      // it could not login
-      setState("login");
-      console.log("DONOR ERROR: Could not login");
-      await sleep(5);
-      location.reload();
+    // it could not login
+    setState("login");
+    console.log("DONOR ERROR: Could not login");
+    await sleep(5);
+    location.reload();
     break;
 
-    case "fetch_instagram_account":
-      if (is429Error()) {
-        setState("waiting_for_start");
-        location.pathname = "/";
-        return;
-      }
+  case "fetch_instagram_account":
+    if (is429Error()) {
+      setState("waiting_for_start"); // TODO: should not wait for time
+      location.pathname = "/";
+      return;
+    }
 
-      let re = /[^/]+/;
-      let match = location.pathname.match(re);
-      if (!match || match.length > 1) {
-        setState("get_next_instagram_account");
-        location.pathname = "/";
-        return;
-      }
-      let username = match[0];
+    let re = /[^/]+/;
+    let match = location.pathname.match(re);
+    if (!match || match.length > 1) {
+      setState("get_next_instagram_account");
+      location.pathname = "/";
+      return;
+    }
+    let username = match[0];
 
-      try {
-        let r = await post(
-          RSSBRIDGE_ROOT + "/?action=cache&bridge=Instagram&as_json=1&key=instagram_user_" + username,
-          "value=" + encodeURIComponent(JSON.stringify(unsafeWindow._sharedData)) + "&access_token=" + encodeURIComponent(ACCESS_TOKEN)
-        );
-      } catch(e) {
-        console.error("DONOR ERROR: error while posting cache", e);
-        await sleep(10);
-        location.reload();
-        return;
-      }
+    try {
+      let r = await post(
+        RSSBRIDGE_ROOT + "/?action=cache&bridge=Instagram&as_json=1&key=instagram_user_" + username,
+        "value=" + encodeURIComponent(JSON.stringify(unsafeWindow._sharedData)) + "&access_token=" + encodeURIComponent(ACCESS_TOKEN)
+      );
+    } catch(e) {
+      console.error("DONOR ERROR: error while posting cache", e);
+      await sleep(10);
+      location.reload();
+      return;
+    }
 
-      await sleep(10 + 5 * Math.random());
-      window.scrollTo({"top": 500, "left": 0, "behavior": "smooth"});
-      await sleep(1 + 3 * Math.random());
-      document.elementFromPoint(400, 100).click();
-      await sleep(3 + 3 * Math.random());
+    await sleep(10 + 5 * Math.random());
+    window.scrollTo({"top": 500, "left": 0, "behavior": "smooth"});
+    await sleep(1 + 3 * Math.random());
+    document.elementFromPoint(400, 100).click();
+    await sleep(3 + 3 * Math.random());
     // break;
 
-    case "get_next_instagram_account":
-      let nextInstagramAccount = await popNextInstagramAccountToCrawl();
-      if (!nextInstagramAccount) {
-        console.log("all finished");
-        setState("waiting_for_start");
-        while(true) {
-          let now = new Date();
-          if (now.getHours() < START_HOUR) {
-            location.pathname = "/";
-          }
-          await sleep(10);
+  case "get_next_instagram_account":
+    let nextInstagramAccount = await popNextInstagramAccountToCrawl();
+    if (!nextInstagramAccount) {
+      console.log("all finished");
+      setState("waiting_for_start");
+      while(true) {
+        let now = new Date();
+        if (now.getHours() < START_HOUR) {
+          location.pathname = "/";
         }
+        await sleep(10);
       }
-      setState("fetch_instagram_account");
-      location.pathname = "/" + nextInstagramAccount;
+    }
+    setState("fetch_instagram_account");
+    location.pathname = "/" + nextInstagramAccount;
     break;
 
-    default:
-      alert("Unknown state: " + state);
+  default:
+    alert("Unknown state: " + state);
     break;
   };
 };
