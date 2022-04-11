@@ -287,7 +287,10 @@ class VkBridge extends BridgeAbstract
 				if ($this->getInput('hide_reposts') === true) {
 					continue;
 				}
+
+				$copy_post_link = '';
 				if ($copy_post_header = $copy_quote->find('div.copy_post_header', 0)) {
+					$copy_post_link = $copy_post_header->find('a.published_by_date', 0)->href;
 					$copy_post_header->outertext = '';
 				}
 
@@ -299,12 +302,19 @@ class VkBridge extends BridgeAbstract
 				}
 				$copy_quote_author = $copy_quote->find('a.copy_author', 0)->outertext;
 				$copy_quote_content = $copy_quote->innertext;
-				$copy_quote->outertext = "<br>Reposted ($copy_quote_author): <br>$copy_quote_content";
+				$copy_quote_origin = $copy_quote_author;
+				if ($copy_post_link) {
+					$copy_quote_origin = '<a href="' . $copy_post_link . '">Post</a> from ' . $copy_quote_origin;
+				}
+				$copy_quote->outertext = "<br>Reposted ($copy_quote_origin): <br>$copy_quote_content";
 			}
 
 			$item = array();
 			$item['content'] = strip_tags(backgroundToImg($post->find('div.wall_text', 0)->innertext), '<a><br><img>');
 			$item['content'] .= $content_suffix;
+			while (str_starts_with($item['content'], '<br>')) {
+				$item['content'] = substr($item['content'], 4);
+			}
 			$item['categories'] = $hashtags;
 
 			// get post link
@@ -371,7 +381,7 @@ class VkBridge extends BridgeAbstract
 
 	private function getTitle($content)
 	{
-		preg_match('/^["\w\ \p{L}\(\)\?#«»-]+/mu', htmlspecialchars_decode($content), $result);
+		preg_match('/^["\w\ \p{L}\(\)\?#«»-]+/mu', htmlspecialchars_decode(strip_tags($content)), $result);
 		if (count($result) == 0) return 'untitled';
 		return $result[0];
 	}
