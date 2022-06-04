@@ -133,6 +133,23 @@ async function fetchInstagramAccounts() {
 function setStatus(status) {
 }
 
+var webProfileInfo;
+
+if (!unsafeWindow.XMLHttpRequest.prototype.getResponseText) {
+  unsafeWindow.XMLHttpRequest.prototype.getResponseText = Object.getOwnPropertyDescriptor(unsafeWindow.XMLHttpRequest.prototype, 'responseText').get;
+}
+Object.defineProperty(unsafeWindow.XMLHttpRequest.prototype, 'responseText', {
+  get: exportFunction(function() {
+    var responseText = unsafeWindow.XMLHttpRequest.prototype.getResponseText.call(this);
+    if (this.responseURL.startsWith("https://i.instagram.com/api/v1/users/web_profile_info/?username="))
+    webProfileInfo = responseText;
+    return responseText;
+  }, unsafeWindow),
+  enumerable: true,
+  configurable: true
+});
+
+
 async function popNextInstagramAccountToCrawl() {
   let current = localStorage.getItem("current_account");
   let accounts = await fetchInstagramAccounts();
@@ -266,11 +283,23 @@ async function main() {
     }
     let username = match[0];
 
+
+
+    await sleep(10 + 5 * Math.random());
+
     try {
-      let r = await post(
-        RSSBRIDGE_ROOT + "/?action=cache&bridge=Instagram&as_json=1&key=instagram_user_" + username,
-        "value=" + encodeURIComponent(JSON.stringify(unsafeWindow._sharedData)) + "&access_token=" + encodeURIComponent(ACCESS_TOKEN)
-      );
+      const sharedData = unsafeWindow._sharedData;
+      if (sharedData && sharedData.entry_data && Object.keys(sharedData.entry_data).length > 0) {
+        let r = await post(
+          RSSBRIDGE_ROOT + "/?action=cache&bridge=Instagram&as_json=1&key=instagram_user_" + username,
+          "value=" + encodeURIComponent(JSON.stringify(sharedData)) + "&access_token=" + encodeURIComponent(ACCESS_TOKEN)
+        );
+      } else if (webProfileInfo) {
+        let r = await post(
+          RSSBRIDGE_ROOT + "/?action=cache&bridge=Instagram&as_json=1&key=instagram_user_" + username,
+          "value=" + encodeURIComponent(webProfileInfo) + "&access_token=" + encodeURIComponent(ACCESS_TOKEN)
+        );
+      }
     } catch(e) {
       console.error("DONOR ERROR: error while posting cache", e);
       await sleep(10);
@@ -278,7 +307,6 @@ async function main() {
       return;
     }
 
-    await sleep(10 + 5 * Math.random());
     window.scrollTo({"top": 500, "left": 0, "behavior": "smooth"});
     await sleep(1 + 3 * Math.random());
     document.elementFromPoint(400, 100).click();
