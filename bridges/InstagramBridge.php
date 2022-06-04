@@ -109,7 +109,11 @@ class InstagramBridge extends BridgeAbstract {
 		$data = $this->getInstagramJSON($this->getURI());
 
 		if(!is_null($this->getInput('u'))) {
-			$userMedia = $data->entry_data->ProfilePage[0]->graphql->user->edge_owner_to_timeline_media->edges;
+			if (isset($data->entry_data)) {
+				$userMedia = $data->entry_data->ProfilePage[0]->graphql->user->edge_owner_to_timeline_media->edges;
+			} else {
+				$userMedia = $data->data->user->edge_owner_to_timeline_media->edges;
+			}
 		} elseif(!is_null($this->getInput('h'))) {
 			$userMedia = $data->data->hashtag->edge_hashtag_to_media->edges;
 		} elseif(!is_null($this->getInput('l'))) {
