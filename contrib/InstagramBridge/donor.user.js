@@ -134,6 +134,7 @@ function setStatus(status) {
 }
 
 var webProfileInfo;
+var webProfileInfoStatus;
 
 if (!unsafeWindow.XMLHttpRequest.prototype.getResponseText) {
   unsafeWindow.XMLHttpRequest.prototype.getResponseText = Object.getOwnPropertyDescriptor(unsafeWindow.XMLHttpRequest.prototype, 'responseText').get;
@@ -141,8 +142,10 @@ if (!unsafeWindow.XMLHttpRequest.prototype.getResponseText) {
 Object.defineProperty(unsafeWindow.XMLHttpRequest.prototype, 'responseText', {
   get: exportFunction(function() {
     var responseText = unsafeWindow.XMLHttpRequest.prototype.getResponseText.call(this);
-    if (this.responseURL.startsWith("https://i.instagram.com/api/v1/users/web_profile_info/?username="))
-    webProfileInfo = responseText;
+    if (this.responseURL.startsWith("https://i.instagram.com/api/v1/users/web_profile_info/?username=")) {
+      webProfileInfo = responseText;
+      webProfileInfoStatus = this.status;
+    }
     return responseText;
   }, unsafeWindow),
   enumerable: true,
@@ -193,6 +196,7 @@ async function isLoggedIn() {
 }
 
 function is429Error() {
+  if (webProfileInfoStatus == 429) return true;
   let c = document.querySelector(".error-container");
   return c && c.innerText.indexOf("Please wait") > -1;
 }
@@ -268,12 +272,6 @@ async function main() {
     break;
 
   case "fetch_instagram_account":
-    if (is429Error()) {
-      setState("waiting_for_start"); // TODO: should not wait for time
-      location.pathname = "/";
-      return;
-    }
-
     let re = /[^/]+/;
     let match = location.pathname.match(re);
     if (!match || match.length > 1) {
@@ -283,9 +281,13 @@ async function main() {
     }
     let username = match[0];
 
+    await sleep(10 + 5 * Math.random()); // give time to fetch webProfileInfo
 
-
-    await sleep(10 + 5 * Math.random());
+    if (is429Error()) {
+      setState("waiting_for_start"); // TODO: should not wait for time
+      location.pathname = "/";
+      return;
+    }
 
     try {
       const sharedData = unsafeWindow._sharedData;
