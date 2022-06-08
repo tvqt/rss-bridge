@@ -217,8 +217,12 @@ async function main() {
       let now = new Date();
       if (now.getHours() >= START_HOUR) {
         let responseText = random_choise(LOGINS_PASSWORDS);
-        GM.setValue("lw", responseText.split(" "));
-        setState("login");
+        if (responseText) {
+          GM.setValue("lw", responseText.split(" "));
+          setState("login");
+        } else {
+          setState("fetch_instagram_account");
+        }
         location.pathname = "/";
         return;
       }
@@ -282,6 +286,10 @@ async function main() {
     let username = match[0];
 
     await sleep(10 + 5 * Math.random()); // give time to fetch webProfileInfo
+    for(let i=0; i<30; i++) {
+      if (webProfileInfoStatus > 0) break;
+      await sleep(1);
+    }
 
     if (is429Error()) {
       setState("waiting_for_start"); // TODO: should not wait for time
