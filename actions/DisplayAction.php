@@ -131,7 +131,21 @@ class DisplayAction implements ActionInterface
             // Collect new data
             try {
                 $bridge->setDatas($bridge_params);
-                $bridge->collectData();
+
+                try {
+                    $bridge->collectData();
+                } catch (\DonorRequestException $e) {
+                    if (!Configuration::getConfig('JobQueue', 'file')) throw $e->getOriginalException();
+
+                    $jq = new JobQueue();
+                    $jobId = $jq->push(get_class($bridge), $bridge->getURI());
+                    $pendingJobsCount = $jq->countPendingJobsBefore($jobId);
+                    http_response_code(202);
+                    print render('donor-request-exception.html.php', [
+                        'pendingJobsCount' => $pendingJobsCount,
+                    ]);
+                    exit;
+                }
 
                 $items = $bridge->getItems();
 

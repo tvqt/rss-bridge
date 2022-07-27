@@ -79,3 +79,17 @@ function logBridgeError($bridgeName, $code)
 
     return $report['count'];
 }
+
+final class DonorRequestException extends \Exception
+{
+    private $originalException;
+
+    public function getOriginalException() {
+        return $this->originalException;
+    }
+
+    public function __construct($originalException) {
+        $this->originalException = $originalException;
+
+    }
+}
