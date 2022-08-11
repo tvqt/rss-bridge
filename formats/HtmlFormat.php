@@ -11,6 +11,10 @@ class HtmlFormat extends FormatAbstract
         $uri = e($extraInfos['uri']);
         $donationUri = e($extraInfos['donationUri']);
         $donationsAllowed = Configuration::getConfig('admin', 'donations');
+        $warning = $extraInfos['warning'] ?? '';
+        if ($warning) {
+            $warning = '<section class="warning">' . htmlspecialchars($warning) . '</section>';
+        }
 
         // Dynamically build buttons for all formats (except HTML)
         $formatFactory = new FormatFactory();
@@ -130,6 +134,7 @@ EOD;
 		<a href="./#bridge-{$_GET['bridge']}"><button class="backbutton">← back to rss-bridge</button></a>
 		{$buttons}
 	</div>
+{$warning}
 {$entries}
 </body>
 </html>

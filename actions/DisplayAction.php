@@ -134,35 +134,61 @@ class DisplayAction implements ActionInterface
 
                 try {
                     $bridge->collectData();
+                    $items = $bridge->getItems();
+                    $infos = [
+                        'name' => $bridge->getName(),
+                        'uri'  => $bridge->getURI(),
+                        'donationUri'  => $bridge->getDonationURI(),
+                        'icon' => $bridge->getIcon()
+                    ];
+
+                    // Transform "legacy" items to FeedItems if necessary.
+                    // Remove this code when support for "legacy" items ends!
+                    if (isset($items[0]) && is_array($items[0])) {
+                        $feedItems = [];
+
+                        foreach ($items as $item) {
+                            $feedItems[] = new \FeedItem($item);
+                        }
+
+                        $items = $feedItems;
+                    }
+
+                    $cache->saveData([
+                        'items' => array_map(function ($i) {
+                            return $i->toArray();
+                        }, $items),
+                        'extraInfos' => $infos
+                    ]);
+
                 } catch (\DonorRequestException $e) {
                     if (!Configuration::getConfig('JobQueue', 'file')) throw $e->getOriginalException();
 
                     $jq = new JobQueue();
-                    $jobId = $jq->push(get_class($bridge), $bridge->getURI());
-                    $pendingJobsCount = $jq->countPendingJobsBefore($jobId);
-                    http_response_code(202);
-                    print render('donor-request-exception.html.php', [
-                        'pendingJobsCount' => $pendingJobsCount,
-                    ]);
-                    exit;
-                }
+                    $jq->push(get_class($bridge), $bridge->getURI());
 
-                $items = $bridge->getItems();
+                    $cached = $cache->loadData();
 
-                if (isset($items[0]) && is_array($items[0])) {
-                    $feedItems = [];
-                    foreach ($items as $item) {
-                        $feedItems[] = new FeedItem($item);
+                    // TODO: this code is duplicated
+                    if (isset($cached['items']) && isset($cached['extraInfos'])) {
+                        foreach ($cached['items'] as $item) {
+                            $items[] = new \FeedItem($item);
+                        }
+
+                        $infos = $cached['extraInfos'];
+                    } else {
+                        // TODO: this code is duplicated
+                        $infos = [
+                            'name' => $bridge->getName(),
+                            'uri'  => $bridge->getURI(),
+                            'donationUri'  => $bridge->getDonationURI(),
+                            'icon' => $bridge->getIcon()
+                        ];
                     }
-                    $items = $feedItems;
+
+                    $infos['warning'] = 'RSS-Bridge pushed job to retreive new data. Temporarly showing cached results';
                 }
 
-                $infos = [
-                    'name' => $bridge->getName(),
-                    'uri'  => $bridge->getURI(),
-                    'donationUri'  => $bridge->getDonationURI(),
-                    'icon' => $bridge->getIcon()
-                ];
             } catch (\Throwable $e) {
                 error_log($e);
 
@@ -223,6 +249,7 @@ class DisplayAction implements ActionInterface
         $format->setItems($items);
         $format->setExtraInfos($infos);
         $lastModified = $cache->getTime();
+        // TODO: if pushed to job queue send other headers to deny proxy or browser to cache
         $format->setLastModified($lastModified);
         if ($lastModified) {
             header('Last-Modified: ' . gmdate('D, d M Y H:i:s ', $lastModified) . 'GMT');
