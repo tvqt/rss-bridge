@@ -135,6 +135,7 @@ function setStatus(status) {
 
 var webProfileInfo;
 var webProfileInfoStatus;
+var _isLoggedIn;
 
 if (!unsafeWindow.XMLHttpRequest.prototype.getResponseText) {
   unsafeWindow.XMLHttpRequest.prototype.getResponseText = Object.getOwnPropertyDescriptor(unsafeWindow.XMLHttpRequest.prototype, 'responseText').get;
@@ -145,6 +146,8 @@ Object.defineProperty(unsafeWindow.XMLHttpRequest.prototype, 'responseText', {
     if (this.responseURL.startsWith("https://i.instagram.com/api/v1/users/web_profile_info/?username=")) {
       webProfileInfo = responseText;
       webProfileInfoStatus = this.status;
+    } else if (this.responseURL.startsWith("https://www.instagram.com/accounts/get_encrypted_credentials/")) {
+      _isLoggedIn = true;
     }
     return responseText;
   }, unsafeWindow),
@@ -188,10 +191,14 @@ async function logout() {
 
 async function isLoggedIn() {
   console.log("checking if logged in");
-  for (var i=0; i<10; i++) {
-    if (document.querySelector("img[data-testid='user-avatar']")) return true;
+  for (var i=0; i<20; i++) {
+    if (_isLoggedIn) {
+      console.log("user is logged in");
+      return true;
+    }
     await sleep(1);
   }
+  console.log("user is NOT logged in");
   return false;
 }
 
