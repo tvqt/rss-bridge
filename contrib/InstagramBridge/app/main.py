@@ -1,3 +1,5 @@
+# in order to work firefox correctly, set this in about config:
+# browser.sessionstore.resume_from_crash -> false
 import subprocess
 import logging
 import threading
@@ -20,6 +22,10 @@ START_CRAWLING = True
 FIREFOX_PONGED = False
 
 
+def cmd(cmd):
+    subprocess.Popen(cmd)
+
+
 class CrawlerThread(threading.Thread):
     def run(self):
         while True:
@@ -34,7 +40,7 @@ class CrawlerThread(threading.Thread):
             sleep(1)
 
         try:
-            p = subprocess.Popen(['firefox', 'http://localhost:8028'])
+            cmd(['firefox', 'http://localhost:8028'])
 
             instagram_users = []
 
@@ -52,7 +58,7 @@ class CrawlerThread(threading.Thread):
                 _logger.info("Progress: {} of {}".format(i+1, len(instagram_users)))
                 url = "https://www.instagram.com/" + instagram_user
                 _logger.info("Opening {}".format(url))
-                subprocess.Popen(['firefox', url])
+                cmd(['firefox', url])
 
                 start_time = time()
                 while True:
@@ -61,10 +67,10 @@ class CrawlerThread(threading.Thread):
 
                     elif time() - start_time > 60*2:
                         _logger.warning("Killing firefox process")
-                        p.kill()
+                        cmd(["pkill", "-f", "firefox"])
                         sleep(5)
                         _logger.info("starting new firefox")
-                        p = subprocess.Popen(['firefox', 'http://localhost:8028'])
+                        cmd(['firefox', 'http://localhost:8028/'])
                         break
 
                     sleep(1)
@@ -75,7 +81,7 @@ class CrawlerThread(threading.Thread):
             _logger.exception("Error in thread. Stopping crawling")
             sleep(5)
         finally:
-            p.kill()
+            cmd(["pkill", "-f", "firefox"])
 
         START_CRAWLING = False
         FIREFOX_PONGED = False
