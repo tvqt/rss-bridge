@@ -23,7 +23,7 @@ FIREFOX_PONGED = False
 
 
 def cmd(cmd):
-    subprocess.Popen(cmd)
+    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 class CrawlerThread(threading.Thread):
