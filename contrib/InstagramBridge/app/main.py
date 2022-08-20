@@ -59,10 +59,10 @@ class CrawlerThread(threading.Thread):
                     if FIREFOX_PONGED is True:
                         break
 
-                    elif time() - start_time > 60:
+                    elif time() - start_time > 60*2:
                         _logger.warning("Killing firefox process")
                         p.kill()
-                        sleep(30)
+                        sleep(5)
                         _logger.info("starting new firefox")
                         p = subprocess.Popen(['firefox', 'http://localhost:8028'])
                         break

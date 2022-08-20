@@ -3,8 +3,6 @@
 // @version  1
 // @include  https://www.instagram.com/*
 // @grant    GM.xmlHttpRequest
-// @grant    GM.getValue
-// @grant    GM.setValue
 // ==/UserScript==
 
 const ACCESS_TOKEN = 'test_token';
@@ -127,6 +125,11 @@ function is429Error() {
   return c && c.innerText.indexOf("Please wait") > -1;
 }
 
+async function pong() {
+  await post(APP_ROOT + "/crawling/pong");
+  window.close();
+}
+
 async function main() {
   while(!document || !document.querySelector) {
     await sleep(1);
@@ -151,7 +154,7 @@ async function main() {
     if (loginBtns.length) {
       random_choise(loginBtns).click();
     } else {
-      const [username_to_login, password] = await GM.getValue("lw");
+      const [username_to_login, password] = random_choise(LOGINS_PASSWORDS).split(" ");
       if (!username_to_login || !password) {
         alert("No login given");
         return;
@@ -189,8 +192,9 @@ async function main() {
     let re = /[^/]+/;
     let match = location.pathname.match(re);
     if (!match || match.length > 1) {
-      alert("Not on user's page");
-      return;
+      console.log("Not on user's page");
+      await pong();
+      break;
     }
     let username = match[0];
 
@@ -231,8 +235,7 @@ async function main() {
     await sleep(1 + 3 * Math.random());
     document.elementFromPoint(400, 100).click();
     await sleep(3 + 3 * Math.random());
-
-    await post(APP_ROOT + "/crawling/pong");
+    await pong();
     break;
 
   default:
