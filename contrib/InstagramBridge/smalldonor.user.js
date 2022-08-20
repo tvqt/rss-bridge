@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name     Instagram content donor for RSS-Bridge
+// @name     small Instagram content donor for RSS-Bridge
 // @version  1
 // @include  https://www.instagram.com/*
 // @grant    GM.xmlHttpRequest
@@ -134,6 +134,11 @@ async function main() {
 
   const state = getState();
   console.log("current state", state);
+  if (location.pathname.startsWith("/challenge")) {
+    console.log("Challenge detected. Doing nothing");
+    return;
+  }
+
   switch(state) {
   case "login":
     await sleep(10);

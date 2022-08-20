@@ -215,6 +215,11 @@ async function main() {
 
   let state = getState();
   console.log("current state", state);
+  if (location.pathname.startsWith("/challenge")) {
+    console.log("Challenge detected. Doing nothing");
+    return;
+  }
+
   showProgress();
   switch(state) {
   case "waiting_for_start":
