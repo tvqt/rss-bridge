@@ -1,5 +1,6 @@
 # in order to work firefox correctly, set this in about config:
 # browser.sessionstore.resume_from_crash -> false
+from pathlib import Path
 import subprocess
 import logging
 import threading
@@ -17,7 +18,7 @@ logging.basicConfig(
 
 _logger = logging.getLogger(__name__)
 
-
+INSTAGRAM_USER_RESUME_PATH = str(Path.home().joinpath(".instagram_user_resume"))
 START_CRAWLING = True
 FIREFOX_PONGED = False
 
@@ -39,7 +40,14 @@ class CrawlerThread(threading.Thread):
         while START_CRAWLING is False:
             sleep(1)
 
+        resume_from_user = None
         try:
+            try:
+                with open(INSTAGRAM_USER_RESUME_PATH, "r") as f:
+                    resume_from_user = f.read().split("\n")[0]
+            except FileNotFoundError:
+                pass
+
             cmd(['firefox', 'http://localhost:8028'])
 
             instagram_users = []
@@ -55,6 +63,11 @@ class CrawlerThread(threading.Thread):
             sleep(5)
 
             for i, instagram_user in enumerate(instagram_users):
+                if resume_from_user is not None:
+                    if resume_from_user == instagram_user:
+                        resume_from_user = None
+                    else:
+                        continue
                 _logger.info("Progress: {} of {}".format(i+1, len(instagram_users)))
                 url = "https://www.instagram.com/" + instagram_user
                 _logger.info("Opening {}".format(url))
@@ -85,6 +98,7 @@ class CrawlerThread(threading.Thread):
 
         START_CRAWLING = False
         FIREFOX_PONGED = False
+        resume_from_user = None
 
 
 url_map = Map([
