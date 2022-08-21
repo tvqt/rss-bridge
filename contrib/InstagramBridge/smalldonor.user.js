@@ -138,7 +138,9 @@ async function main() {
   const state = getState();
   console.log("current state", state);
   if (location.pathname.startsWith("/challenge")) {
-    console.log("Challenge detected. Doing nothing");
+    logout();
+    setState("login");
+    location.pathname = "/accounts/login";
     return;
   }
 
