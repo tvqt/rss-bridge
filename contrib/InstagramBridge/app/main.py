@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import logging
 import threading
+import os
 from time import sleep, time
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import Map, Rule
@@ -45,6 +46,7 @@ class CrawlerThread(threading.Thread):
             try:
                 with open(INSTAGRAM_USER_RESUME_PATH, "r") as f:
                     resume_from_user = f.read().split("\n")[0]
+                os.unlink(INSTAGRAM_USER_RESUME_PATH)
             except FileNotFoundError:
                 pass
 
