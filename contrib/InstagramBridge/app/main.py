@@ -1,6 +1,7 @@
 # in order to work firefox correctly, set this in about config:
 # browser.sessionstore.resume_from_crash -> false
 from pathlib import Path
+import queue
 import subprocess
 import logging
 import threading
@@ -19,7 +20,7 @@ logging.basicConfig(
 
 _logger = logging.getLogger(__name__)
 
-RSSBRIDGE_ROOT='/var/www/html/rss-bridge'
+DOWNLOAD_VIDEOS_CMD = ['sudo', '-u', 'www-data', '/var/www/html/rss-bridge/contrib/InstagramBridge/download_video.sh']
 INSTAGRAM_USER_RESUME_PATH = str(Path.home().joinpath(".instagram_user_resume"))
 START_CRAWLING = True
 FIREFOX_PONGED = False
@@ -27,6 +28,17 @@ FIREFOX_PONGED = False
 
 def cmd(cmd):
     return subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+video_task_queue = queue.SimpleQueue()
+
+
+class VideosDownloaderThread(threading.Thread):
+    def run(self):
+        while True:
+            instagram_user = video_task_queue.get()
+            _logger.info("Downloading videos for " + instagram_user)
+            cmd(DOWNLOAD_VIDEOS_CMD + [instagram_user])
 
 
 class CrawlerThread(threading.Thread):
@@ -92,9 +104,7 @@ class CrawlerThread(threading.Thread):
                     sleep(1)
 
                 FIREFOX_PONGED = False
-
-                _logger.info("Downloading videos if any")
-                cmd([RSSBRIDGE_ROOT + "/contrib/InstagramBridge/download_videos.sh", instagram_user]).wait()
+                video_task_queue.put_nowait(instagram_user)
 
         except Exception:
             _logger.exception("Error in thread. Stopping crawling")
@@ -139,4 +149,6 @@ def application(environ, start_response):
 if __name__ == "__main__":
     crawler_thread = CrawlerThread(args=["../../../instagram_accounts.txt"])
     crawler_thread.start()
+    vd = VideosDownloaderThread()
+    vd.start()
     run_simple("127.0.0.1", 8028, application, threaded=True)
