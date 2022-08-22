@@ -20,7 +20,7 @@ logging.basicConfig(
 
 _logger = logging.getLogger(__name__)
 
-DOWNLOAD_VIDEOS_CMD = ['sudo', '-u', 'www-data', '/var/www/html/rss-bridge/contrib/InstagramBridge/download_video.sh']
+DOWNLOAD_VIDEOS_CMD = ['sudo', '-u', 'www-data', '/var/www/html/rss-bridge/contrib/InstagramBridge/download_videos.sh']
 INSTAGRAM_USER_RESUME_PATH = str(Path.home().joinpath(".instagram_user_resume"))
 START_CRAWLING = True
 FIREFOX_PONGED = False
@@ -38,7 +38,8 @@ class VideosDownloaderThread(threading.Thread):
         while True:
             instagram_user = video_task_queue.get()
             _logger.info("Downloading videos for " + instagram_user)
-            cmd(DOWNLOAD_VIDEOS_CMD + [instagram_user])
+            cmd(DOWNLOAD_VIDEOS_CMD + [instagram_user]).wait()
+            _logger.info("Downloading videos for " + instagram_user + " has been finished")
 
 
 class CrawlerThread(threading.Thread):
