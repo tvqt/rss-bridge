@@ -48,6 +48,14 @@ class CacheAction extends ActionAbstract {
 		}
 		$bridge->setCacheData($key, $value);
 
+		// collect data to generate list of txt's with videos
+		$bridge_params = [
+			'u' => str_replace('instagram_user_', '', $key),
+			'direct_links' => 'on',
+		];
+		$bridge->setDatas($bridge_params, 'Username');
+		$bridge->collectData();
+
 		header('Content-Type: text/plain');
 		echo 'done';
 	}
