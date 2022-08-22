@@ -6,7 +6,11 @@ log () {
 cd "$(dirname "$0")"
 cd ../..
 log "searching for tasks for downloading"
-TXT_LIST=`find ./cache/InstagramBridge -mindepth 2 -name "*.txt"`
+if [ -z "$1" ]; then
+    TXT_LIST=`find ./cache/InstagramBridge -mindepth 2 -name "*.txt"`
+else
+    TXT_LIST=`find ./cache/InstagramBridge/$1 -name "*txt"`
+fi
 TXT_COUNT="$(echo "$TXT_LIST" | wc -l)"
 COUNTER=0
 set -xe
