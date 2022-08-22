@@ -19,13 +19,14 @@ logging.basicConfig(
 
 _logger = logging.getLogger(__name__)
 
+RSSBRIDGE_ROOT='/var/www/html/rss-bridge'
 INSTAGRAM_USER_RESUME_PATH = str(Path.home().joinpath(".instagram_user_resume"))
 START_CRAWLING = True
 FIREFOX_PONGED = False
 
 
 def cmd(cmd):
-    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 class CrawlerThread(threading.Thread):
@@ -91,6 +92,9 @@ class CrawlerThread(threading.Thread):
                     sleep(1)
 
                 FIREFOX_PONGED = False
+
+                _logger.info("Downloading videos if any")
+                cmd([RSSBRIDGE_ROOT + "/contrib/InstagramBridge/download_videos.sh", instagram_user]).wait()
 
         except Exception:
             _logger.exception("Error in thread. Stopping crawling")
