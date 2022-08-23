@@ -138,7 +138,7 @@ async function main() {
   const state = getState();
   console.log("current state", state);
   if (location.pathname.startsWith("/challenge")) {
-    logout();
+    await logout();
     setState("login");
     location.pathname = "/accounts/login";
     return;
@@ -207,7 +207,7 @@ async function main() {
     }
 
     if (is429Error()) {
-      logout();
+      await logout();
       setState("login"); // TODO: should not wait for time
       location.pathname = "/";
       return;
