@@ -95,10 +95,7 @@ class CrawlerThread(threading.Thread):
                         break
 
                     elif time() - start_time > 60*2:
-                        _logger.warning("Killing firefox process")
-                        cmd(["pkill", "-f", "firefox"])
-                        sleep(5)
-                        _logger.info("starting new firefox")
+                        _logger.warning("No answer from usersript. Starting new firefox")
                         cmd(['firefox', 'http://localhost:8028/'])
                         break
 
@@ -111,7 +108,8 @@ class CrawlerThread(threading.Thread):
             _logger.exception("Error in thread. Stopping crawling")
             sleep(5)
         finally:
-            cmd(["pkill", "-f", "firefox"])
+            pass
+            # cmd(["pkill", "-f", "firefox"])
 
         START_CRAWLING = False
         FIREFOX_PONGED = False
