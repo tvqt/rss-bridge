@@ -103,6 +103,14 @@ class InstagramBridge extends BridgeAbstract {
 
 	}
 
+	protected function getInput($input){
+		if ($input == 'u') {
+			$r = parent::getInput($input);
+			if ($r) return strtolower($r);
+		}
+		return parent::getInput($input);
+	}
+
 	public function collectData(){
 		$directLink = !is_null($this->getInput('direct_links')) && $this->getInput('direct_links');
 
