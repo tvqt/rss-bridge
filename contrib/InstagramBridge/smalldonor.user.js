@@ -88,7 +88,7 @@ Object.defineProperty(unsafeWindow.XMLHttpRequest.prototype, 'responseText', {
     if (this.responseURL.startsWith("https://i.instagram.com/api/v1/users/web_profile_info/?username=")) {
       webProfileInfo = responseText;
       webProfileInfoStatus = this.status;
-    } else if (this.responseURL.startsWith("https://www.instagram.com/accounts/get_encrypted_credentials/")) {
+    } else if (this.responseURL.startsWith("https://i.instagram.com/api/v1/web/accounts/get_encrypted_credentials/")) {
       _isLoggedIn = true;
     }
     return responseText;
@@ -97,37 +97,61 @@ Object.defineProperty(unsafeWindow.XMLHttpRequest.prototype, 'responseText', {
   configurable: true
 });
 
-
 async function logout() {
   let ili = await isLoggedIn();
   if (!ili) return;
   var s = document.createElement("script");
   s.src = "https://www.instagram.com/accounts/logout";
   document.head.appendChild(s);
+  await sleep(3);
 }
 
-async function isLoggedIn() {
-  console.log("checking if logged in");
+async function isLoggedIn_internal() {
   for (var i=0; i<20; i++) {
+    if (location.pathname.startsWith("/accounts/")) return false;
+    if (location.pathname.startsWith("/challenge/")) return true;
     if (_isLoggedIn) {
-      console.log("user is logged in");
       return true;
     }
     await sleep(1);
   }
-  console.log("user is NOT logged in");
+  if (location.pathname == "/") {
+    return !!document.querySelector('input[placeholder="Search"]');
+  } else {
+    return true;
+  }
   return false;
 }
 
-function is429Error() {
-  if (webProfileInfoStatus == 429) return true;
-  let c = document.querySelector(".error-container");
-  return c && c.innerText.indexOf("Please wait") > -1;
+async function isLoggedIn() {
+  console.log("checking if logged in");
+  const r = await isLoggedIn_internal();
+  if (r) {
+    console.log("user is logged in");
+  } else {
+    console.log("user is NOT logged in");
+  }
+  return r;
 }
 
-async function pong() {
-  await post(APP_ROOT + "/crawling/pong");
-  window.close();
+
+function is429Error() {
+  if (location.pathname.startsWith("/challenge/")) return true;
+  if (webProfileInfoStatus == 429) {
+    localStorage.removeItem("too_many_requests");
+    return true;
+  }
+  if (document.title.indexOf("Page not found") > -1) {
+    var counter = parseInt(localStorage.getItem("too_many_requests")) || 0;
+    if (counter > 2) {
+      localStorage.removeItem("too_many_requests");
+      return true;
+    } else {
+      localStorage.setItem("too_many_requests", counter + 1)
+      return false;
+    }
+  }
+  return false;
 }
 
 async function main() {
@@ -149,8 +173,7 @@ async function main() {
     await sleep(10);
     if (await isLoggedIn()) {
       setState("fetch_instagram_account");
-      location.pathname = "/";
-      return;
+      break;
     }
     let loginBtns = Array.from(document.querySelectorAll("button[type='button']")).filter( x => x.innerText == "Log In" );
     if (loginBtns.length) {
@@ -188,15 +211,14 @@ async function main() {
     alert("DONOR ERROR: Could not login");
     await sleep(5);
     location.reload();
-    break;
+    return;
 
   case "fetch_instagram_account":
     let re = /[^/]+/;
     let match = location.pathname.match(re);
     if (!match || match.length > 1) {
-      console.log("Not on user's page");
-      await pong();
-      break;
+      console.error("Not on user's page");
+      return;
     }
     let username = match[0];
 
@@ -209,7 +231,7 @@ async function main() {
     if (is429Error()) {
       await logout();
       setState("login"); // TODO: should not wait for time
-      location.pathname = "/";
+      location.pathname = "/accounts/login";
       return;
     }
 
@@ -237,13 +259,18 @@ async function main() {
     await sleep(1 + 3 * Math.random());
     document.elementFromPoint(400, 100).click();
     await sleep(3 + 3 * Math.random());
-    await pong();
     break;
 
   default:
     alert("Unknown state: " + state);
     break;
   };
+  
+  await post(APP_ROOT + "/crawling/pong");
+  unsafeWindow.close();
 };
 
+setTimeout(function() {
+  unsafeWindow.close();
+}, 1000*60*3);
 main();
