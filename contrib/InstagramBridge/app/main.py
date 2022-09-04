@@ -97,6 +97,9 @@ class CrawlerThread(threading.Thread):
                     elif time() - start_time > 60*2:
                         _logger.warning("No answer from usersript. Closing tab")
                         cmd(['xdotool', 'search', '--class', 'firefox', 'key', '--window', '%@', 'Ctrl+w'])
+                        sleep(5)
+                        if os.system("pidof firefox > /dev/null") != 0:
+                            cmd(['firefox', 'http://localhost:8028'])
                         break
 
                     sleep(1)
