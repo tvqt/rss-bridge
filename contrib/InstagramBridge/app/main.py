@@ -100,6 +100,7 @@ class CrawlerThread(threading.Thread):
                         sleep(5)
                         if os.system("pidof firefox > /dev/null") != 0:
                             cmd(['firefox', 'http://localhost:8028'])
+                            sleep(5)
                         break
 
                     sleep(1)
