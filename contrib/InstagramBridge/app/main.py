@@ -1,5 +1,3 @@
-# in order to work firefox correctly, set this in about config:
-# browser.sessionstore.resume_from_crash -> false
 from pathlib import Path
 import queue
 import subprocess
@@ -23,7 +21,7 @@ _logger = logging.getLogger(__name__)
 DOWNLOAD_VIDEOS_CMD = ['sudo', '-u', 'www-data', '/var/www/html/rss-bridge/contrib/InstagramBridge/download_videos.sh']
 INSTAGRAM_USER_RESUME_PATH = str(Path.home().joinpath(".instagram_user_resume"))
 START_CRAWLING = True
-FIREFOX_PONGED = False
+BROWSER_PONGED = False
 
 
 def cmd(cmd):
@@ -49,7 +47,7 @@ class CrawlerThread(threading.Thread):
 
     def _run(self):
         global START_CRAWLING
-        global FIREFOX_PONGED
+        global BROWSER_PONGED
         filename = self._args[0]
 
         while START_CRAWLING is False:
@@ -64,7 +62,7 @@ class CrawlerThread(threading.Thread):
             except FileNotFoundError:
                 pass
 
-            cmd(['firefox', 'http://localhost:8028'])
+            cmd(['chromium', 'http://localhost:8028'])
 
             instagram_users = []
 
@@ -87,25 +85,25 @@ class CrawlerThread(threading.Thread):
                 _logger.info("Progress: {} of {}".format(i+1, len(instagram_users)))
                 url = "https://www.instagram.com/" + instagram_user
                 _logger.info("Opening {}".format(url))
-                cmd(['firefox', url])
+                cmd(['chromium', url])
 
                 start_time = time()
                 while True:
-                    if FIREFOX_PONGED is True:
+                    if BROWSER_PONGED is True:
                         break
 
                     elif time() - start_time > 60*2:
                         _logger.warning("No answer from usersript. Closing tab")
-                        cmd(['xdotool', 'search', '--class', 'firefox', 'key', '--window', '%@', 'Ctrl+w'])
+                        cmd(['xdotool', 'search', '--class', 'chromium', 'key', '--window', '%@', 'Ctrl+w'])
                         sleep(5)
-                        if os.system("pidof firefox > /dev/null") != 0:
-                            cmd(['firefox', 'http://localhost:8028'])
+                        if os.system("pidof chromium > /dev/null") != 0:
+                            cmd(['chromium', 'http://localhost:8028'])
                             sleep(5)
                         break
 
                     sleep(1)
 
-                FIREFOX_PONGED = False
+                BROWSER_PONGED = False
                 video_task_queue.put_nowait(instagram_user)
 
         except Exception:
@@ -113,10 +111,10 @@ class CrawlerThread(threading.Thread):
             sleep(5)
         finally:
             pass
-            # cmd(["pkill", "-f", "firefox"])
+            # cmd(["pkill", "-f", "chromium"])
 
         START_CRAWLING = False
-        FIREFOX_PONGED = False
+        BROWSER_PONGED = False
         resume_from_user = None
 
 
@@ -128,7 +126,7 @@ url_map = Map([
 
 def application(environ, start_response):
     global START_CRAWLING
-    global FIREFOX_PONGED
+    global BROWSER_PONGED
 
     try:
         urls = url_map.bind_to_environ(environ)
@@ -137,7 +135,7 @@ def application(environ, start_response):
         if endpoint == "start":
             START_CRAWLING = True
         elif endpoint == "pong":
-            FIREFOX_PONGED = True
+            BROWSER_PONGED = True
 
         response = Response("ok", mimetype="text/plain")
     except HTTPException as e:
