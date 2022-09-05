@@ -3,6 +3,7 @@
 // @version  1
 // @include  https://www.instagram.com/*
 // @grant    GM.xmlHttpRequest
+// @grant    window.close
 // ==/UserScript==
 
 const ACCESS_TOKEN = 'test_token';
@@ -214,6 +215,11 @@ async function main() {
     return;
 
   case "fetch_instagram_account":
+    if (!(await isLoggedIn())) {
+      setState("login");
+      location.pathname = "/accounts/login";
+      return;
+    }
     let re = /[^/]+/;
     let match = location.pathname.match(re);
     if (!match || match.length > 1) {
@@ -222,7 +228,7 @@ async function main() {
     }
     let username = match[0];
 
-    await sleep(10 + 5 * Math.random()); // give time to fetch webProfileInfo
+    //await sleep(10 + 5 * Math.random()); // give time to fetch webProfileInfo
     for(let i=0; i<30; i++) {
       if (webProfileInfoStatus > 0) break;
       await sleep(1);
@@ -265,12 +271,13 @@ async function main() {
     alert("Unknown state: " + state);
     break;
   };
-  
+
   await post(APP_ROOT + "/crawling/pong");
-  unsafeWindow.close();
+  window.close();
 };
 
 setTimeout(function() {
-  unsafeWindow.close();
-}, 1000*60*3);
+  window.close();
+}, 1000*60);
 main();
+
