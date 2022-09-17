@@ -21,17 +21,19 @@ final class APIAuthenticationMiddleware
             throw new \Exception('API authentication is disabled in this instance', 403);
         }
 
-        $header = trim($_SERVER['Authorization'] ?? '');
+        $header = trim($_SERVER['HTTP_AUTHORIZATION'] ?? '');
         $position = strrpos($header, 'Bearer ');
 
         if ($position !== false) {
             $accessTokenGiven = substr($header, $position + 7);
 
-            if ($accessTokenGiven == $accessTokenInConfig) {
+            if ($accessTokenGiven != $accessTokenInConfig) {
                 return;
             }
+
+            throw new \Exception('Incorrect access token', 403);
         }
 
-        throw new \Exception('Incorrect access token', 401);
+        throw new \Exception('No access token given', 403);
     }
 }
