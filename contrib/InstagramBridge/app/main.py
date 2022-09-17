@@ -31,6 +31,13 @@ def cmd(cmd):
 video_task_queue = queue.SimpleQueue()
 
 
+def open_in_browser(url):
+    if os.system("pidof chromium > /dev/null") != 0:
+        cmd(['chromium', 'http://localhost:8028'])
+        sleep(5)
+    cmd(['chromium', url])
+
+
 class VideosDownloaderThread(threading.Thread):
     def run(self):
         while True:
@@ -62,8 +69,6 @@ class CrawlerThread(threading.Thread):
             except FileNotFoundError:
                 pass
 
-            cmd(['chromium', 'http://localhost:8028'])
-
             instagram_users = []
 
             with open(filename) as f:
@@ -85,7 +90,7 @@ class CrawlerThread(threading.Thread):
                 _logger.info("Progress: {} of {}".format(i+1, len(instagram_users)))
                 url = "https://www.instagram.com/" + instagram_user
                 _logger.info("Opening {}".format(url))
-                cmd(['chromium', url])
+                open_in_browser(url)
 
                 start_time = time()
                 while True:
@@ -96,9 +101,6 @@ class CrawlerThread(threading.Thread):
                         _logger.warning("No answer from usersript. Closing tab")
                         cmd(['xdotool', 'search', '--class', 'chromium', 'key', '--window', '%@', 'Ctrl+w'])
                         sleep(5)
-                        if os.system("pidof chromium > /dev/null") != 0:
-                            cmd(['chromium', 'http://localhost:8028'])
-                            sleep(5)
                         break
 
                     sleep(1)
