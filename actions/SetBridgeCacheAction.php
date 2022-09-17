@@ -16,16 +16,8 @@ class SetBridgeCacheAction implements ActionInterface
 {
     public function execute(array $request)
     {
-        // TODO: move it to external trait
-        $accessTokenInConfig = Configuration::getConfig('api', 'access_token');
-        if (!$accessTokenInConfig) {
-            throw new \Exception('Editing cache is disabled in this instance', 403);
-        }
-
-        $accessTokenGiven = $request['access_token'] ?? '';
-        if ($accessTokenGiven != $accessTokenInConfig) {
-            throw new \Exception('Incorrect access token', 403);
-        }
+        $authenticationMiddleware = new AuthenticationMiddleware();
+        $authenticationMiddleware();
 
         $key = $request['key'] or returnClientError('You must specify key!');
 

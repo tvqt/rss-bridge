@@ -16,21 +16,8 @@ class PullJobQueueAction implements ActionInterface
 {
     public function execute(array $request)
     {
-        // TODO: move it to external trait
-        $accessTokenInConfig = Configuration::getConfig('api', 'access_token');
-        if (!$accessTokenInConfig) {
-            throw new \Exception('Access token is not set in this instance', 403);
-        }
-
-        $accessTokenGiven = $request['access_token'] ?? '';
-
-        if (!$accessTokenGiven) {
-            throw new \Exception('Access token is not given', 403);
-        }
-
-        if ($accessTokenGiven != $accessTokenInConfig) {
-            throw new \Exception('Incorrect access token', 403);
-        }
+        $authenticationMiddleware = new AuthenticationMiddleware();
+        $authenticationMiddleware();
 
         $channel = $request['channel'] or returnClientError('You must specify channel!');
 
