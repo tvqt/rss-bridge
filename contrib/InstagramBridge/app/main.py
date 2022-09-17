@@ -32,7 +32,7 @@ video_task_queue = queue.SimpleQueue()
 
 
 def open_in_browser(url):
-    if os.system("pidof chromium > /dev/null") != 0:
+    if os.system("xdotool search --class chromium > /dev/null") != 0:
         cmd(['chromium', 'http://localhost:8028'])
         sleep(5)
     cmd(['chromium', url])
