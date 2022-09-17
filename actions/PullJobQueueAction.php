@@ -16,7 +16,7 @@ class PullJobQueueAction implements ActionInterface
 {
     public function execute(array $request)
     {
-        $authenticationMiddleware = new AuthenticationMiddleware();
+        $authenticationMiddleware = new APIAuthenticationMiddleware();
         $authenticationMiddleware();
 
         $channel = $request['channel'] or returnClientError('You must specify channel!');
