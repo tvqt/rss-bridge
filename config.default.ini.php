@@ -70,6 +70,10 @@ username = "admin"
 ; This default password is public knowledge. Replace it.
 password = "7afbf648a369b261"
 
+[api]
+
+access_token = ""
+
 [error]
 
 ; Defines how error messages are returned by RSS-Bridge
