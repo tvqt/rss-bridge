@@ -18,7 +18,7 @@ final class APIAuthenticationMiddleware
     {
         $accessTokenInConfig = Configuration::getConfig('api', 'access_token');
         if (!$accessTokenInConfig) {
-            throw new \Exception('API authentication is disabled in this instance', 403);
+            $this->exit('API authentication is disabled in this instance', 403);
         }
 
         $header = trim($_SERVER['HTTP_AUTHORIZATION'] ?? '');
@@ -31,9 +31,15 @@ final class APIAuthenticationMiddleware
                 return;
             }
 
-            throw new \Exception('Incorrect access token', 403);
+            $this->exit('Incorrect access token', 403);
         }
 
-        throw new \Exception('No access token given', 403);
+        $this->exit('No access token given', 403);
+    }
+
+    private function exit($message, $code) {
+        http_response_code($code);
+        header('content-type: text/plain');
+        die($message);
     }
 }
