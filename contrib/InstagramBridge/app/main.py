@@ -97,7 +97,7 @@ class CrawlerThread(threading.Thread):
                     if BROWSER_PONGED is True:
                         break
 
-                    elif time() - start_time > 60*2:
+                    elif time() - start_time > 60:
                         _logger.warning("No answer from usersript. Closing tab")
                         cmd(['xdotool', 'search', '--class', 'chromium', 'key', '--window', '%@', 'Ctrl+w'])
                         sleep(5)
