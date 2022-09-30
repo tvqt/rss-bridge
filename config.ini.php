@@ -99,3 +99,7 @@ port = 11211
 session_id = 8405994197%3AKuVOiFJVvuagUC%3A5%3AAYc6nUIBgkjHShO8NODV2g_tSK7sJRz3BrI5dcAe7A
 ds_user_id = 8405994197
 cache_timeout = 3600
+
+
+[JobQueue]
+file = ./jobqueue.sqlite3
