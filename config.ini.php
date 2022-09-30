@@ -103,4 +103,3 @@ cache_timeout = 3600
 
 [JobQueue]
 file = ./jobqueue.sqlite3
-extension=sqlite3
