@@ -12,9 +12,6 @@ class SQLiteCache implements CacheInterface
 
     public function __construct()
     {
-        if (!extension_loaded('ext-sqlite3')) {
-            throw new \Exception('"ext-sqlite3" extension not loaded. Please check "php.ini"');
-        }
 
         if (!is_writable(PATH_CACHE)) {
             throw new \Exception('The cache folder is not writable');
