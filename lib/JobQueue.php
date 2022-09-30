@@ -17,10 +17,7 @@ class JobQueue
 {
     public function __construct()
     {
-        if (!extension_loaded('sqlite3')) {
-            print render('error.html.php', ['message' => '"sqlite3" extension not loaded. Please check "php.ini"']);
-            exit;
-        }
+
 
         if (!is_writable(PATH_CACHE)) {
             returnServerError(
