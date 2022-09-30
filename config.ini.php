@@ -20,7 +20,7 @@ useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 
 
 ; Defines the cache type used by RSS-Bridge
 ; "file" = FileCache (default)
-type = "file"
+type = "sqlite"
 
 ; Allow users to specify custom timeout for specific requests.
 ; true  = enabled
